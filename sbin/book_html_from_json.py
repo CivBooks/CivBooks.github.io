@@ -27,7 +27,7 @@ def write_books_htmls_from_json():
             continue
         if not book_json.get('source'):
             raise Exception(f'No source in book. Entry {nr_book}')
-        pagename = safe_string(book_json['signed'] + '_' + book_json['title'])
+        pagename = safe_string(book_json['signed'] + '-' + book_json['title'])
         dirname = safe_string(book_json['source'])
         os.makedirs(dirname, exist_ok=True)
         with open(f'{dirname}/{pagename}.html', 'w') as file_html:
