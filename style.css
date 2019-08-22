@@ -22,12 +22,8 @@ h3 {
     }
 }
 
-@font-face {
-    font-family: 'minecraftia';
-    src: url('font/minecraftia_regular.ttf') format('ttf'), url('font/minecraftia_regular.woff2') format('woff2'), url('font/minecraftia_regular.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-}
+@font-face { font-family: 'minecraft'; src: url('font/Minecraft-Regular.otf'); }
+@font-face { font-family: 'minecraft'; src: url('font/Minecraft-Bold.otf'); font-weight: bold; }
 
 .author-face {
     float: right;
@@ -49,9 +45,9 @@ h3 {
     background: url("img/page.png") center;
     width: 292px;
     height: 360px;
-    position: relative;
     /* content/indicator are positioned absolutely */
-    font: 16px / 18px "minecraftia";
+    position: relative;
+    font: 20px / 0.9em "minecraft";
     color: black;
 }
 
