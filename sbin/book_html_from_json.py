@@ -4,10 +4,12 @@ import re
 import sys
 import urllib3
 
+books_root = 'books'
 
 source_names = {
     'civcraft_1': 'Civcraft 1.0',
     'civcraft_2': 'Civcraft 2.0',
+    'civtemp': 'CivTemp',
     'civcraft_3': 'Civcraft 3.0',
     'devoted_2': 'Devoted 2.0',
     'devoted_3': 'Devoted 3.0',
@@ -27,10 +29,11 @@ def write_books_htmls_from_json():
             continue
         if not book_json.get('source'):
             raise Exception(f'No source in book. Entry {nr_book}')
-        pagename = safe_string(book_json['signed'] + '-' + book_json['title'])
-        dirname = safe_string(book_json['source'])
+        pagename = safe_string(book_json['title'])
+        dirname = book_json['signed']
         os.makedirs(dirname, exist_ok=True)
-        with open(f'{dirname}/{pagename}.html', 'w') as file_html:
+        # TODO check if exists, add suffix, prompt to check manually
+        with open(f'{books_root}/{dirname}/{pagename}.html', 'w') as file_html:
             file_html.write(book_html)
 
 
@@ -38,7 +41,7 @@ re_formatting = re.compile(r'§[0-9a-zA-Z]')
 
 
 def template_page(content, page_nr, pages_total):
-    page_nr += 1
+    page_nr += 1  # start at 1
     # TODO formatting
     # for now, strip styles:
     content = re_formatting.sub('', content)
@@ -63,7 +66,7 @@ def template_book(book):
     source_name = source_names[source.lower()]
     return f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="ie=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title} - by {author} - Civ Book Viewer</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../../style.css">
     <meta property="og:type" content="object" />
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="Signed by {signed} on {source_name}. Read the full book here and discover more Civ books." />
@@ -72,7 +75,7 @@ def template_book(book):
     <meta property="og:image" content="../img/CBTC.png" />
     <link rel="shortcut icon" href="../img/CBTC.png">
 </head><body>
-<a class="back-home" href="../index.html">Civ Book Viewer</a>
+<a class="back-home" href="../../index.html">Civ Book Viewer</a>
 <h1>{title}</h1>
 <div class="author">
     <a href="https://minecraft-statistic.net/en/player/{author}.html" target="_blank" rel="noopener noreferrer">
@@ -85,7 +88,7 @@ def template_book(book):
 </div></body></html>'''
 
 
-re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]+')
+re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
 
 
 def safe_string(s):
