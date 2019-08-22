@@ -27,7 +27,8 @@ try {
     // set text box content to query
     document.getElementById('query').value = query;
     // reflect query in title
-    document.title = 'Civ Book Viewer: ' + query;
+    document.title = 'Civ Book Viewer';
+    if (query) document.title += ': ' + query;
     // set url to search for query
     if (!location.search.match(new RegExp('[?&]search=' + encodeURIComponent(query) + '($|&)'))) {
       var nextUrl = location.origin + location.pathname;
@@ -102,7 +103,10 @@ try {
         resultsNode.appendChild(document.createTextNode(
           'Displaying only the first ' + maxResultsCount + ' results.'));
       }
-      if (results.length <= 0) resultsNode.innerText = 'No books match that search. Try something else?';
+      if (results.length <= 0) {
+        resultsNode.innerText = 'No books match that search. Try something else?';
+        hintsNode.classList.remove('hidden');
+      }
       resultsNode.classList.remove('hidden');
     }).catch(function (error) {
       loadAnimNode.classList.add('hidden');
