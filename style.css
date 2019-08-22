@@ -120,8 +120,19 @@ footer {
 }
 
 .search-result .title {
-    font-size: 1.2em;
+    font-size: 1.5em;
     font-weight: bold;
+    display: block;
+}
+
+.search-result .signee,
+.search-result .server,
+.search-result .stats {
+    display: inline-block;
+    padding-left: 0.5em;
+}
+.search-result .stats {
+    float: right;
 }
 
 .page .fmtl { font-weight: bold; }
