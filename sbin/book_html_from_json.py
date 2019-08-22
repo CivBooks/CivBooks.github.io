@@ -85,7 +85,7 @@ def template_book(book):
 </div></body></html>'''
 
 
-re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"]+')
+re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]+')
 
 
 def safe_string(s):
