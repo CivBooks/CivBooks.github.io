@@ -1,11 +1,11 @@
 html {
-    background-color: #fffcf0;
+    color: #111;
+    background-color: #acf;
 }
 
 body {
     margin: 16px auto;
     max-width: 400px;
-    color: #444;
     padding: 0 16px;
     font: 16px / 1.5 sans-serif;
 }
