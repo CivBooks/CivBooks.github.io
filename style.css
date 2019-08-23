@@ -5,7 +5,7 @@ html {
 
 body {
     margin: 16px auto;
-    max-width: 400px;
+    max-width: 584px; /* two book pages wide */
     padding: 0 16px;
     font: 16px / 1.5 sans-serif;
 }
@@ -35,20 +35,24 @@ h3 {
 }
 
 .book {
-    max-width: 292px;
-    margin: 0 auto;
+    margin: 1em auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: space-around;
 }
 
 .page {
-    margin: 1em 0;
     image-rendering: pixelated;
     background: url("img/page.png") center;
     width: 292px;
+    min-width: 292px;
     height: 360px;
     /* content/indicator are positioned absolutely */
     position: relative;
     font: 20px / 0.9em "minecraft";
     color: black;
+    margin: 0.5em 0;
 }
 
 .page-indicator {
