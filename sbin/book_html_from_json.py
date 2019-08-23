@@ -97,9 +97,9 @@ def template_book(book):
                 title="Face of {author_or_signee}" alt="Face of {author_or_signee}"></a>' \
         if author_or_signee else ''
 
-    author_html = f'<div class="author">Written by <a class="author-name" href="../../index.html?search=:author:{author}">{author}</a>' \
+    author_html = f'<div class="author">Written by <a class="author-name" href="../../index.html?search=:author:{author}">{author}</a></div>' \
         if author else ''
-    signee_html = f'<div class="signee">Signed by <a class="signee-name" href="../../index.html?search=:signee:{signee}">{signee}</a>' \
+    signee_html = f'<div class="signee">Signed by <a class="signee-name" href="../../index.html?search=:signee:{signee}">{signee}</a></div>' \
         if signee != author else ''
 
     return f'''<!DOCTYPE html><html lang="en">
