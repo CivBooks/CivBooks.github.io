@@ -99,3 +99,24 @@ footer {
     font-size: 1.2em;
     font-weight: bold;
 }
+
+.page .fmtl { font-weight: bold; }
+.page .fmto { font-style: italic; }
+.page .fmtn { text-decoration: underline; }
+.page .fmtm { text-decoration-line: line-through; }
+.page .fmt4 { color: #be0000; }
+.page .fmtc { color: #fe3f3f; }
+.page .fmt6 { color: #D9A334; }
+.page .fmte { color: #fefe3f; }
+.page .fmt2 { color: #00be00; }
+.page .fmta { color: #3ffe3f; }
+.page .fmtb { color: #3ffefe; }
+.page .fmt3 { color: #00bebe; }
+.page .fmt1 { color: #0000be; }
+.page .fmt9 { color: #3f3ffe; }
+.page .fmtd { color: #fe3ffe; }
+.page .fmt5 { color: #be00be; }
+.page .fmtf { color: #ffffff; }
+.page .fmt7 { color: #bebebe; }
+.page .fmt8 { color: #3f3f3f; }
+.page .fmt0 { color: #000000; }

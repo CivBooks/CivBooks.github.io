@@ -48,18 +48,33 @@ def write_books_htmls_from_json(source_file):
             file_html.write(book_html)
 
 
-re_formatting = re.compile(r'§[0-9a-zA-Z]')
+re_formatting = re.compile(r'§([0-9a-fA-FklmnorKLMNOR])|[^§]+|§')
 
 
 def template_page(content, page_nr, pages_total):
     page_nr += 1  # start at 1
-    # TODO formatting
-    # for now, strip styles:
-    content = re_formatting.sub('', content)
+    styled_content = ''
+    # line breaks reset all formatting
+    content_with_resets = content.replace('\n', '§r\n') + '\n'
+    tags_to_close = 0  # number of </span> to insert at next §r
+    for match in re_formatting.finditer(content_with_resets):
+        fcode = match.group(1)
+        if not fcode:
+            # content segment
+            styled_content += match.group(0)
+        elif fcode.lower() == 'r':
+            # reset segment
+            styled_content += '</span>' * tags_to_close
+            tags_to_close = 0
+        else:
+            # formatting segment
+            styled_content += f'<span class="fmt{fcode.lower()}">'
+            tags_to_close += 1
+    styled_content = styled_content.rstrip()
     return f'<div class="page" id="page-{page_nr}">\
 <a href="#page-{page_nr}" class="page-indicator">\
 Page {page_nr} of {pages_total}</a>\
-<div class="page-content">{content}</div>\
+<div class="page-content">{styled_content}</div>\
 </div>'
 
 
