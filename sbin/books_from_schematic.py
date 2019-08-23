@@ -5,7 +5,7 @@ Usage: python3 books_from_schematic.py path/to/my.schematic Server_Name
 Output example:
 {   "source": "Devoted_3",
     "title": "The Navy Seal",
-    "signed": "auxchar",
+    "signee": "auxchar",
     "generation": "Original",
     "pages": [
         "What the fuck did you just fucking say about me, you little bitch?",
@@ -69,7 +69,7 @@ def print_json_books_from_schematic(fpath, source_info):
             book = {
                 'source': source_info,
                 'title': stack['tag'].get('title', novalue).value,
-                'signed': stack['tag'].get('author', novalue).value,
+                'signee': stack['tag'].get('author', novalue).value,
                 'generation': generations[stack['tag'].get('generation', novalue).value],
                 'pages': [cleanup_page(page.value) for page in stack['tag']['pages']],
             }
