@@ -5,16 +5,6 @@ import sys
 
 books_root = 'books'
 
-source_names = {
-    'civcraft_1': 'Civcraft 1.0',
-    'civcraft_2': 'Civcraft 2.0',
-    'civtemp': 'CivTemp',
-    'civcraft_3': 'Civcraft 3.0',
-    'devoted_2': 'Devoted 2.0',
-    'devoted_3': 'Devoted 3.0',
-    'civclassic_2': 'CivClassic 2.0',
-}
-
 
 def write_books_htmls_from_json_paths(source_paths):
     for path in source_paths:
@@ -29,18 +19,20 @@ def write_books_htmls_from_json(source_file):
             continue
         book_json = json.loads(line)
         if not book_json.get('signee'):
-            print(
-                f'Skipping untitled book in {book_json["source"]} with {len(book_json["pages"])} pages at line {line_nr}', file=sys.stderr)
+            print(f'Skipping unsigned book at line {line_nr} with {len(book_json["pages"])} pages'
+                  + f' in {book_json["entry_source"]}', file=sys.stderr)
             continue
-        if not book_json.get('title'):
-            print(
-                f'Skipping unsigned book in {book_json["source"]} with {len(book_json["pages"])} pages at line {line_nr}', file=sys.stderr)
+        if not book_json.get('item_title'):
+            print(f'Skipping untitled book at line {line_nr} with {len(book_json["pages"])} pages'
+                  + f' in {book_json["entry_source"]}', file=sys.stderr)
             continue
-        if not book_json.get('source'):
-            raise Exception(f'No source in book. Line {line_nr}')
+        if not book_json.get('entry_source'):
+            raise Exception(f'No entry_source in book. Line {line_nr}')
         # not original author; transcription counts as its own edition
-        dir_path = f'{books_root}/{book_json["signee"]}'
-        page_path = f'{dir_path}/{safe_string(book_json["title"])}.html'
+        signee = book_json["signee"]
+        safe_title = safe_string(book_json["item_title"])
+        dir_path = f'{books_root}/{signee}'
+        page_path = f'{dir_path}/{safe_title}.html'
         # TODO check if exists, add suffix, prompt to check manually
         book_html = template_book(book_json)
         os.makedirs(dir_path, exist_ok=True)
@@ -84,23 +76,25 @@ def template_book(book):
         template_page(content, page_nr, pages_total)
         for page_nr, content in enumerate(book['pages'])
     )
-    title = book['title']
+    title = book['item_title']
     signee = book.get('signee')
     author = book.get('author')
     author_or_signee = book.get('author', signee)
-    source = book['source']
-    source_name = source_names[source.lower()]
+    entry_source = book['entry_source']
+    safe_source = entry_source.replace(' ', '_').replace('.0', '')
 
-    head_img = f'<a href="https://minecraft-statistic.net/en/player/{author_or_signee}.html" \
-                target="_blank" rel="noopener noreferrer">\
-            <img class="author-face" src="https://www.mc-heads.net/avatar/{author_or_signee}" \
-                title="Face of {author_or_signee}" alt="Face of {author_or_signee}"></a>' \
-        if author_or_signee else ''
+    head_img = '' if not author_or_signee else \
+        f'<a href="https://minecraft-statistic.net/en/player/{author_or_signee}.html" \
+target="_blank" rel="noopener noreferrer">\
+<img class="author-face" src="https://www.mc-heads.net/avatar/{author_or_signee}" \
+title="Face of {author_or_signee}" alt="Face of {author_or_signee}"></a>' \
 
-    author_html = f'<div class="author">Written by <a class="author-name" href="../../index.html?search=:author:{author}">{author}</a></div>' \
-        if author else ''
-    signee_html = f'<div class="signee">Signed by <a class="signee-name" href="../../index.html?search=:signee:{signee}">{signee}</a></div>' \
-        if signee != author else ''
+    author_html = '' if not author else \
+        f'<div class="author">Written by <a class="author-name" \
+href="../../index.html?search=:author:{author}">{author}</a></div>'
+    signee_html = '' if signee == author else \
+        f'<div class="signee">Signed by <a class="signee-name" \
+href="../../index.html?search=:signee:{signee}">{signee}</a></div>'
 
     return f'''<!DOCTYPE html><html lang="en">
 <head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -109,7 +103,7 @@ def template_book(book):
     <link rel="stylesheet" href="../../style.css">
     <meta property="og:type" content="object" />
     <meta property="og:title" content="{title}" />
-    <meta property="og:description" content="Signed by {signee} on {source_name}. Read the full book here and discover more Civ books." />
+    <meta property="og:description" content="Signed by {signee} on {entry_source}. Read the full book here and discover more Civ books." />
     <meta property="og:site_name" content="Civ Book Viewer" />
     <meta property="og:url" content="https://gjum.github.io/CivBookViewer/" />
     <meta property="og:image" content="https://gjum.github.io/CivBookViewer/img/icon.png" />
@@ -120,7 +114,7 @@ def template_book(book):
 {head_img}
 {author_html}
 {signee_html}
-<div class="source">on <a class="source-server" href="../../index.html?search=:server:{source}">{source_name}</a></div>
+<div class="source">on <a class="source-server" href="../../index.html?search=:server:{safe_source}">{entry_source}</a></div>
 <div class="book">
 {html_pages}
 </div>

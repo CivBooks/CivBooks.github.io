@@ -1,10 +1,10 @@
 '''
 Extracts books from a .schematic file and prints them in JSON format.
 Installation: python3 -m pip install nbt
-Usage: python3 books_from_schematic.py path/to/my.schematic Server_Name
+Usage: python3 books_from_schematic.py path/to/my.schematic Server Name
 Output example:
-{   "source": "Devoted_3",
-    "title": "The Navy Seal",
+{   "entry_source": "Devoted_3",
+    "item_title": "The Navy Seal",
     "signee": "auxchar",
     "generation": "Original",
     "pages": [
@@ -47,7 +47,7 @@ generations = {
 }
 
 
-def print_json_books_from_schematic(fpath, source_info):
+def print_json_books_from_schematic(fpath, entry_source):
     f = nbt.NBTFile(fpath)
     for te in f['TileEntities']:
         if 'Items' not in te:
@@ -67,8 +67,8 @@ def print_json_books_from_schematic(fpath, source_info):
                 continue
 
             book = {
-                'source': source_info,
-                'title': stack['tag'].get('title', novalue).value,
+                'entry_source': entry_source,
+                'item_title': stack['tag'].get('title', novalue).value,
                 'signee': stack['tag'].get('author', novalue).value,
                 'generation': generations[stack['tag'].get('generation', novalue).value],
                 'pages': [cleanup_page(page.value) for page in stack['tag']['pages']],
@@ -94,5 +94,5 @@ def cleanup_page(in_str):
 
 if __name__ == "__main__":
     fpath = sys.argv[1]
-    source_info = sys.argv[2] if len(sys.argv) > 2 else None
-    print_json_books_from_schematic(fpath, source_info)
+    entry_source = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else None
+    print_json_books_from_schematic(fpath, entry_source)
