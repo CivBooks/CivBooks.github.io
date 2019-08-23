@@ -123,7 +123,9 @@ def template_book(book):
 <div class="source">on <a class="source-server" href="../../index.html?search=:server:{source}">{source_name}</a></div>
 <div class="book">
 {html_pages}
-</div></body></html>'''
+</div>
+<script defer src="../../book.js"></script>
+</body></html>'''
 
 
 re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
