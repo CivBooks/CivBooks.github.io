@@ -2,7 +2,6 @@ import json
 import os
 import re
 import sys
-import urllib3
 
 books_root = 'books'
 
@@ -17,23 +16,35 @@ source_names = {
 }
 
 
-def write_books_htmls_from_json():
-    books_json = json.load(sys.stdin)
-    for nr_book, book_json in enumerate(books_json):
-        book_html = template_book(book_json)
+def write_books_htmls_from_json_paths(source_paths):
+    for path in source_paths:
+        with open(path) as f:
+            write_books_htmls_from_json(f)
+
+
+def write_books_htmls_from_json(source_file):
+    for line_nr, line in enumerate(source_file):
+        line = line.strip()
+        if not line:
+            continue
+        book_json = json.loads(line)
         if not book_json.get('signed'):
-            print('Skipping book, not signed. Entry', nr_book, file=sys.stderr)
+            print(
+                f'Skipping untitled book in {book_json["source"]} with {len(book_json["pages"])} pages at line {line_nr}', file=sys.stderr)
             continue
         if not book_json.get('title'):
-            print('Skipping book, no title. Entry', nr_book, file=sys.stderr)
+            print(
+                f'Skipping unsigned book in {book_json["source"]} with {len(book_json["pages"])} pages at line {line_nr}', file=sys.stderr)
             continue
         if not book_json.get('source'):
-            raise Exception(f'No source in book. Entry {nr_book}')
-        pagename = safe_string(book_json['title'])
-        dirname = book_json['signed']
-        os.makedirs(dirname, exist_ok=True)
+            raise Exception(f'No source in book. Line {line_nr}')
+        # not original author; transcription counts as its own edition
+        dir_path = f'{books_root}/{book_json["signed"]}'
+        page_path = f'{dir_path}/{safe_string(book_json["title"])}.html'
         # TODO check if exists, add suffix, prompt to check manually
-        with open(f'{books_root}/{dirname}/{pagename}.html', 'w') as file_html:
+        book_html = template_book(book_json)
+        os.makedirs(dir_path, exist_ok=True)
+        with open(page_path, 'w') as file_html:
             file_html.write(book_html)
 
 
@@ -60,8 +71,7 @@ def template_book(book):
     )
     title = book['title']
     signed = book['signed']
-    # TODO track original author separately; conditionally display only when known
-    author = signed
+    author = book.get('author', signed)
     source = book['source']
     source_name = source_names[source.lower()]
     return f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="ie=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -96,4 +106,5 @@ def safe_string(s):
 
 
 if __name__ == "__main__":
-    write_books_htmls_from_json()
+    source_paths = sys.argv[1:] if len(sys.argv) > 1 else ['/dev/stdin']
+    write_books_htmls_from_json_paths(source_paths)
