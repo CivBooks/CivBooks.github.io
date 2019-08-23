@@ -40,6 +40,7 @@ h3 {
     flex-wrap: wrap;
     justify-content: center;
     align-content: space-around;
+    min-width: 260px; /* page width - 2 * body margin */
 }
 
 .page {
