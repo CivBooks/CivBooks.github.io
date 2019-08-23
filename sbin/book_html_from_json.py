@@ -45,8 +45,8 @@ def template_page(content, page_nr, pages_total):
     # TODO formatting
     # for now, strip styles:
     content = re_formatting.sub('', content)
-    return f'<div class="page">\
-<a href="#page-{page_nr}" id="page-{page_nr}" class="page-indicator">\
+    return f'<div class="page" id="page-{page_nr}">\
+<a href="#page-{page_nr}" class="page-indicator">\
 Page {page_nr} of {pages_total}</a>\
 <div class="page-content">{content}</div>\
 </div>'
