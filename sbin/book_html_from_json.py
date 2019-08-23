@@ -72,8 +72,8 @@ def template_book(book):
     <meta property="og:description" content="Signed by {signed} on {source_name}. Read the full book here and discover more Civ books." />
     <meta property="og:site_name" content="Civ Book Viewer" />
     <meta property="og:url" content="https://gjum.github.io/CivBookViewer/" />
-    <meta property="og:image" content="../img/CBTC.png" />
-    <link rel="shortcut icon" href="../img/CBTC.png">
+    <meta property="og:image" content="https://gjum.github.io/CivBookViewer/img/icon.png" />
+    <link rel="shortcut icon" href="https://gjum.github.io/CivBookViewer/img/icon.png">
 </head><body>
 <a class="back-home" href="../../index.html">Civ Book Viewer</a>
 <h1>{title}</h1>
