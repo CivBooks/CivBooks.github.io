@@ -3,7 +3,7 @@ Extracts books from a .schematic file and prints them in JSON format.
 Installation: python3 -m pip install nbt
 Usage: python3 books_from_schematic.py path/to/my.schematic Server Name
 Output example:
-{   "entry_source": "Devoted_3",
+{   "item_origin": "Devoted 3.0",
     "item_title": "The Navy Seal",
     "signee": "auxchar",
     "generation": "Original",
@@ -47,7 +47,7 @@ generations = {
 }
 
 
-def print_json_books_from_schematic(fpath, entry_source):
+def print_json_books_from_schematic(fpath, item_origin):
     f = nbt.NBTFile(fpath)
     for te in f['TileEntities']:
         if 'Items' not in te:
@@ -60,6 +60,7 @@ def print_json_books_from_schematic(fpath, entry_source):
         #     continue
         for stack in te['Items']:
             item_id = stack['id'].value
+            # TODO shulker boxes items may contain more books
             if item_id not in ('minecraft:written_book', 'minecraft:writable_book') \
                     and item_id not in unknown_item_ids:
                 unknown_item_ids.add(te_id)
@@ -67,7 +68,7 @@ def print_json_books_from_schematic(fpath, entry_source):
                 continue
 
             book = {
-                'entry_source': entry_source,
+                'item_origin': item_origin,
                 'item_title': stack['tag'].get('title', novalue).value,
                 'signee': stack['tag'].get('author', novalue).value,
                 'generation': generations[stack['tag'].get('generation', novalue).value],
@@ -94,5 +95,5 @@ def cleanup_page(in_str):
 
 if __name__ == "__main__":
     fpath = sys.argv[1]
-    entry_source = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else None
-    print_json_books_from_schematic(fpath, entry_source)
+    item_origin = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else None
+    print_json_books_from_schematic(fpath, item_origin)
