@@ -63,11 +63,9 @@ try {
       // prevent page reload
       history.pushState(null, document.title, nextUrl);
     }
-    var hintsNode = document.getElementById('search-hints');
     var loadAnimNode = document.getElementById('search-animation');
     var resultsNode = document.getElementById('search-results');
     if (!query) {
-      hintsNode.classList.remove('hidden');
       loadAnimNode.classList.add('hidden');
       resultsNode.classList.add('hidden');
       removeAllChildNodes(resultsNode);
@@ -76,7 +74,6 @@ try {
 
     var indexJsonPromise = getIndexJson();
     loadAnimNode.classList.remove('hidden');
-    hintsNode.classList.add('hidden');
     resultsNode.classList.add('hidden');
     removeAllChildNodes(resultsNode);
 
@@ -99,6 +96,7 @@ try {
       function filter(book) {
         // -1 to check one more book
         if (resultSlotsLeft <= -1) return false;
+
         if (querySignees.length > 0) {
           if (!querySignees.includes(book.signee.toLowerCase())) return false;
         }
@@ -132,7 +130,6 @@ try {
       }
       if (results.length <= 0) {
         resultsNode.innerText = 'No books match that search. Try something else?';
-        hintsNode.classList.remove('hidden');
       }
       resultsNode.classList.remove('hidden');
     }).catch(function (error) {
