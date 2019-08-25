@@ -143,6 +143,7 @@ try {
         searchStatusNode.innerText = 'Displaying all ' + results.length + ' results.';
       }
 
+      results.sort(function (a, b) { return (a.item_title || '').localeCompare(b.item_title) });
       removeAllChildNodes(resultsNode);
       results.forEach(function (book) {
         resultsNode.appendChild(bookToNode(book));
