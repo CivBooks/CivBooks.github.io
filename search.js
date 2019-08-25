@@ -53,8 +53,8 @@ try {
     // set text box content to query
     document.getElementById('query').value = query;
     // reflect query in title
-    if (query) document.title = 'Search: ' + query + ' - Civ Book Viewer';
-    else document.title = 'Civ Book Viewer';
+    if (query) document.title = 'Search: ' + query + ' - Civ Books';
+    else document.title = 'Civ Books';
     // set url to search for query
     if (!location.search.match(new RegExp('[?&]search=' + encodeURIComponent(query) + '($|&)'))) {
       var nextUrl = location.origin + location.pathname;

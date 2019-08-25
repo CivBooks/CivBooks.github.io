@@ -22,7 +22,7 @@ a:visited {
 }
 
 .muted, .muted:visited, .muted a, .muted a:visited {
-    color: lightgray;
+    color: #888;
 }
 
 .hidden {
@@ -95,6 +95,10 @@ a:visited {
     word-wrap: break-word;
     width: 232px;
     /* necessary for line breaking */
+}
+
+footer {
+    text-align: center;
 }
 
 footer,

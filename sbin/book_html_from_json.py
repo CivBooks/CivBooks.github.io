@@ -143,6 +143,7 @@ def template_book(book):
         for page_nr, content in enumerate(book['pages'])
     )
     title = book.get('item_title') or "-unsigned-"
+    page_count = len(book['pages'])
     signee = book.get('signee') or "-unsigned-"
     author = book.get('author')
     author_or_signee = book.get('author') or signee
@@ -165,19 +166,19 @@ href="../../?search=:signee:{signee}">{signee}</a></div>'
     return f'''<!DOCTYPE html><html lang="en">
 <head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} - by {author_or_signee} - Civ Book Viewer</title>
+    <title>{title} - by {author_or_signee} - Civ Books</title>
     <link rel="prefetch" href="../../font/Minecraft-Regular.otf">
     <link rel="prefetch" href="../../img/page.png">
     <link rel="stylesheet" href="../../style.css">
     <meta property="og:type" content="object" />
     <meta property="og:title" content="{title}" />
-    <meta property="og:description" content="Signed by {signee} on {item_origin}. Read the full book here and discover more Civ books." />
-    <meta property="og:site_name" content="Civ Book Viewer" />
-    <meta property="og:url" content="https://gjum.github.io/CivBookViewer/" />
-    <meta property="og:image" content="https://gjum.github.io/CivBookViewer/img/icon.png" />
-    <link rel="shortcut icon" href="https://gjum.github.io/CivBookViewer/img/icon.png">
+    <meta property="og:description" content="Signed by {signee} on {item_origin}. Read all {page_count} pages here and discover more Civ books." />
+    <meta property="og:site_name" content="Civ Books" />
+	<meta property="og:url" content="https://CivBooks.github.io/" />
+	<meta property="og:image" content="https://CivBooks.github.io/img/icon.png" />
+	<link rel="shortcut icon" href="img/icon.png">
 </head><body>
-<a class="back-home" href="../../">Civ Book Viewer</a>
+<a class="back-home" href="../../">Civ Books</a>
 <h1>{title}</h1>
 {head_img}
 {author_html}
@@ -186,6 +187,12 @@ href="../../?search=:signee:{signee}">{signee}</a></div>'
 <div class="book">
 {html_pages}
 </div>
+<footer>
+<p>Part of the <a href="https://github.com/CivBooks" target="_blank" rel="noopener noreferrer">Civ Books</a>
+project by <a href="https://github.com/Gjum" target="_blank" rel="noopener noreferrer">Gjum</a>.
+</p>
+<img src="../../img/icon.png" width="64px" alt="Civ Books Logo" />
+</footer>
 <script defer src="../../book.js"></script>
 </body></html>'''
 
