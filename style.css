@@ -21,7 +21,7 @@ a:visited {
     color: #55c;
 }
 
-.muted, .muted a {
+.muted, .muted:visited, .muted a, .muted a:visited {
     color: lightgray;
 }
 
