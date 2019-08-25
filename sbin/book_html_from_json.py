@@ -166,8 +166,9 @@ href="../../?search=:signee:{signee}">{signee}</a></div>'
 <head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title} - by {author_or_signee} - Civ Book Viewer</title>
-    <link rel="stylesheet" href="../../style.css">
     <link rel="prefetch" href="../../font/Minecraft-Regular.otf">
+    <link rel="prefetch" href="../../img/page.png">
+    <link rel="stylesheet" href="../../style.css">
     <meta property="og:type" content="object" />
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="Signed by {signee} on {item_origin}. Read the full book here and discover more Civ books." />
