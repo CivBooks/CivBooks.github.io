@@ -72,6 +72,7 @@ try {
       removeAllChildNodes(resultsNode);
       return;
     }
+    searchStatusNode.innerText = 'Searching ...';
 
     var indexJsonPromise = getIndexJson();
     resultsNode.classList.add('hidden');
