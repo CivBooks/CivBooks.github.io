@@ -1,5 +1,5 @@
 if (!String.prototype.includes) {
-  String.prototype.includes = function(search, start) {
+  String.prototype.includes = function (search, start) {
     'use strict';
     if (typeof start !== 'number') {
       start = 0;
@@ -15,12 +15,12 @@ if (!String.prototype.includes) {
 if (!Array.prototype.includes) {
   Object.defineProperty(Array.prototype, "includes", {
     enumerable: false,
-    value: function(obj) {
-        var newArr = this.filter(function(el) {
-          return el == obj;
-        });
-        return newArr.length > 0;
-      }
+    value: function (obj) {
+      var newArr = this.filter(function (el) {
+        return el == obj;
+      });
+      return newArr.length > 0;
+    }
   });
 }
 
