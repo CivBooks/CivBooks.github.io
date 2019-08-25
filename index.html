@@ -20,30 +20,38 @@
 <body>
 	<header>
 		<h1>Civ Book Viewer</h1>
-		<aside>Browse books archived by the <a href="https://www.reddit.com/r/MaesterAlliance" target="_blank"
-				rel="noopener noreferrer">Maesters</a>.</aside>
+		<aside>Read full books written on Civ servers.</aside>
 	</header>
 
 	<h2 id="search">Search</h2>
-	<form class=search-form onsubmit="event.preventDefault();updateSearchResults()"><input type="search"
-			class="search-query" name="search" id="query" placeholder="Search titles, authors, contents" /><input
-			type="submit" class="search-go" value="Go" /></form>
+	<form class=search-form onsubmit="event.preventDefault();updateSearchResults()">
+		<input autofocus type="search" class="search-query" name="search" id="query"
+			placeholder="Search titles, authors, contents" />
+		<input type="submit" class="search-go" value="Go" /></form>
 	<div id="search-animation" class="hidden">Searching ...</div>
 	<div id="search-results" class="hidden"></div>
 	<div id="search-hints">
 		<p>
 			Search by Server:
 			<a href="?search=:server:Civcraft_1">Civcraft 1.0</a>,
+			<a href="?search=:server:Devoted_2">Devoted 2.0</a>,
+			<a href="?search=:server:Devoted_3">Devoted 3.0</a>,
+		</p>
+		<p>
+			Books from the following servers will be added in the future:
 			<a href="?search=:server:Civcraft_2" class="muted">Civcraft 2.0</a>,
 			<a href="?search=:server:Civcraft_Temp" class="muted">CivTemp</a>,
 			<a href="?search=:server:Civcraft_3" class="muted">Civcraft 3.0</a>,
-			<a href="?search=:server:Devoted_2">Devoted 2.0</a>,
-			<a href="?search=:server:Devoted_3">Devoted 3.0</a>,
+			<a href="?search=:server:CivEx_1" class="muted">CivEx 1.0</a>,
+			<a href="?search=:server:CivEx_2" class="muted">CivEx 2.0</a>,
+			<a href="?search=:server:CivEx_3" class="muted">CivEx 3.0</a>,
+			<a href="?search=:server:CivEx_First_Light" class="muted">CivEx First Light</a>,
+			<a href="?search=:server:Devoted_1" class="muted">Devoted 1.0</a>,
 			<a href="?search=:server:CivClassic_2" class="muted">CivClassic 2.0</a>
 		</p>
 		<p>
-			You can search for any words in the title, and additionally for specific servers ("realms"/"ages")
-			and authors (currently only signees):
+			You can search for any words in the book title.
+			Additionally you can search for specific servers ("realms"/"ages") and authors (currently only signees):
 		</p>
 		<ul>
 			<li><code>:server:Civcraft_2</code> to only show books that were available during Civcraft 2.0,</li>
@@ -57,7 +65,9 @@
 	</div>
 
 	<footer>
-		<p>This tool was created by <a href="https://github.com/Gjum" target="_blank" rel="noopener noreferrer">Gjum</a>
+		<p>
+			This tool was created by
+			<a href="https://github.com/Gjum" target="_blank" rel="noopener noreferrer">Gjum</a>.
 		</p>
 		<p>The <a href="https://github.com/Gjum/CivBookViewer" target="_blank" rel="noopener noreferrer">source code</a>
 			is public.</p>
