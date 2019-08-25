@@ -63,16 +63,19 @@ def print_json_books_from_schematic(fpath, item_origin):
             # TODO shulker boxes items may contain more books
             if item_id not in ('minecraft:written_book', 'minecraft:writable_book') \
                     and item_id not in unknown_item_ids:
-                unknown_item_ids.add(te_id)
+                unknown_item_ids.add(item_id)
                 print('Ignoring unexpected item id:', item_id, file=sys.stderr)
                 continue
 
+            tag = stack.get('tag')
             book = {
                 'item_origin': item_origin,
-                'item_title': stack['tag'].get('title', novalue).value,
-                'signee': stack['tag'].get('author', novalue).value,
-                'generation': generations[stack['tag'].get('generation', novalue).value],
-                'pages': [cleanup_page(page.value) for page in stack['tag']['pages']],
+                'item_title': tag.get('title', novalue).value if tag else None,
+                'signee': tag.get('author', novalue).value if tag else None,
+                'generation': (generations[tag.get('generation', novalue).value]
+                               if tag and 'generation' in tag else None),
+                'pages': ([cleanup_page(page.value) for page in tag['pages']]
+                          if tag and 'pages' in tag else []),
             }
             print(json.dumps(book, separators=(',', ':')))
 
