@@ -127,6 +127,9 @@ try {
       if (hasMoreResults) {
         resultsNode.appendChild(document.createTextNode(
           'Displaying only the first ' + maxResultsCount + ' results.'));
+      } else {
+        resultsNode.appendChild(document.createTextNode(
+          'Displaying all ' + results.length + ' results.'));
       }
       if (results.length <= 0) {
         resultsNode.innerText = 'No books match that search. Try something else?';
