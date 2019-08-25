@@ -157,10 +157,10 @@ title="Face of {author_or_signee}" alt="Face of {author_or_signee}"></a>'
 
     author_html = '' if not author else \
         f'<div class="author">Written by <a class="author-name" \
-href="../../index.html?search=:author:{author}">{author}</a></div>'
+href="../../?search=:author:{author}">{author}</a></div>'
     signee_html = '' if signee == author or signee == "-unsigned-" else \
         f'<div class="signee">Signed by <a class="signee-name" \
-href="../../index.html?search=:signee:{signee}">{signee}</a></div>'
+href="../../?search=:signee:{signee}">{signee}</a></div>'
 
     return f'''<!DOCTYPE html><html lang="en">
 <head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -176,12 +176,12 @@ href="../../index.html?search=:signee:{signee}">{signee}</a></div>'
     <meta property="og:image" content="https://gjum.github.io/CivBookViewer/img/icon.png" />
     <link rel="shortcut icon" href="https://gjum.github.io/CivBookViewer/img/icon.png">
 </head><body>
-<a class="back-home" href="../../index.html">Civ Book Viewer</a>
+<a class="back-home" href="../../">Civ Book Viewer</a>
 <h1>{title}</h1>
 {head_img}
 {author_html}
 {signee_html}
-<div class="source">on <a class="source-server" href="../../index.html?search=:server:{safe_origin}">{item_origin}</a></div>
+<div class="source">on <a class="source-server" href="../../?search=:server:{safe_origin}">{item_origin}</a></div>
 <div class="book">
 {html_pages}
 </div>
