@@ -100,15 +100,31 @@ try {
         if (querySignees.length > 0) {
           if (!querySignees.includes(book.signee.toLowerCase())) return false;
         }
-        if (queryServers.length > 0) {
-          var safeItemOrigin = book.item_origin.toLowerCase().replace(/ /g, '_').replace(/\.0$/, '');
-          if (!queryServers.includes(safeItemOrigin)) return false;
+
+        // lazily computed
+        var safeItemOrigin = null;
+        function getSafeItemOrigin() {
+          if (safeItemOrigin === null) safeItemOrigin = book.item_origin.toLowerCase().replace(/ /g, '_').replace(/\.0$/, '');
+          return safeItemOrigin;
         }
+
+        if (queryServers.length > 0) {
+          if (!queryServers.includes(getSafeItemOrigin())) return false;
+        }
+
         var hasAllWords = true;
         queryWords.forEach(function (word) {
-          if (!book.item_title.toLowerCase().includes(word)) hasAllWords = false;
+          if (
+            !book.item_title.toLowerCase().includes(word)
+            && !book.signee.toLowerCase().includes(word)
+            && !book.item_origin.toLowerCase().includes(word)
+            && !getSafeItemOrigin().toLowerCase().includes(word)
+          ) {
+            hasAllWords = false;
+          }
         });
         if (!hasAllWords) return false;
+
         // it's a match!
         resultSlotsLeft -= 1;
         if (resultSlotsLeft <= -1) {
