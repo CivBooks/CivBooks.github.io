@@ -63,17 +63,17 @@ try {
       // prevent page reload
       history.pushState(null, document.title, nextUrl);
     }
-    var loadAnimNode = document.getElementById('search-animation');
+    var searchStatusNode = document.getElementById('search-status');
     var resultsNode = document.getElementById('search-results');
+
     if (!query) {
-      loadAnimNode.classList.add('hidden');
+      searchStatusNode.innerText = '';
       resultsNode.classList.add('hidden');
       removeAllChildNodes(resultsNode);
       return;
     }
 
     var indexJsonPromise = getIndexJson();
-    loadAnimNode.classList.remove('hidden');
     resultsNode.classList.add('hidden');
     removeAllChildNodes(resultsNode);
 
@@ -134,27 +134,22 @@ try {
         return true;
       }
 
-      // replace progress animation with results
-      loadAnimNode.classList.add('hidden');
+      if (results.length <= 0) {
+        searchStatusNode.innerText = 'No books match that search. Try something else?';
+      } else if (hasMoreResults) {
+        searchStatusNode.innerText = 'Displaying only the first ' + maxResultsCount + ' results.';
+      } else {
+        searchStatusNode.innerText = 'Displaying all ' + results.length + ' results.';
+      }
+
       removeAllChildNodes(resultsNode);
       results.forEach(function (book) {
         resultsNode.appendChild(bookToNode(book));
       });
-      if (hasMoreResults) {
-        resultsNode.appendChild(document.createTextNode(
-          'Displaying only the first ' + maxResultsCount + ' results.'));
-      } else {
-        resultsNode.appendChild(document.createTextNode(
-          'Displaying all ' + results.length + ' results.'));
-      }
-      if (results.length <= 0) {
-        resultsNode.innerText = 'No books match that search. Try something else?';
-      }
       resultsNode.classList.remove('hidden');
     }).catch(function (error) {
-      loadAnimNode.classList.add('hidden');
       resultsNode.classList.remove('hidden');
-      resultsNode.innerText = 'Error while searching: ' + error;
+      searchStatusNode.innerText = 'Error while searching: ' + error;
     });
   }
 
