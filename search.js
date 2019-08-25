@@ -1,3 +1,29 @@
+if (!String.prototype.includes) {
+  String.prototype.includes = function(search, start) {
+    'use strict';
+    if (typeof start !== 'number') {
+      start = 0;
+    }
+
+    if (start + search.length > this.length) {
+      return false;
+    } else {
+      return this.indexOf(search, start) !== -1;
+    }
+  };
+}
+if (!Array.prototype.includes) {
+  Object.defineProperty(Array.prototype, "includes", {
+    enumerable: false,
+    value: function(obj) {
+        var newArr = this.filter(function(el) {
+          return el == obj;
+        });
+        return newArr.length > 0;
+      }
+  });
+}
+
 function displayError(message) {
   var pre = document.createElement('pre');
   pre.innerText = '' + message;
@@ -44,7 +70,7 @@ try {
       hintsNode.classList.remove('hidden');
       loadAnimNode.classList.add('hidden');
       resultsNode.classList.add('hidden');
-      resultsNode.childNodes.forEach(function (node) { node.remove(); });
+      removeAllChildNodes(resultsNode);
       return;
     }
 
@@ -52,7 +78,7 @@ try {
     loadAnimNode.classList.remove('hidden');
     hintsNode.classList.add('hidden');
     resultsNode.classList.add('hidden');
-    resultsNode.childNodes.forEach(function (node) { node.remove(); });
+    removeAllChildNodes(resultsNode);
 
     var queryServers = [];
     var querySignees = [];
@@ -69,7 +95,8 @@ try {
       var resultSlotsLeft = maxResultsCount;
       var hasMoreResults = false; // true if a maxResultsCount+1 'th book is found
 
-      var results = Object.values(indexJson).filter(function (book) {
+      var results = Object.keys(indexJson).map(function (key) { return indexJson[key]; }).filter(filter)
+      function filter(book) {
         // -1 to check one more book
         if (resultSlotsLeft <= -1) return false;
         if (querySignees.length > 0) {
@@ -91,11 +118,11 @@ try {
           return false; // don't show this book, it's above the result count limit
         }
         return true;
-      });
+      }
 
       // replace progress animation with results
       loadAnimNode.classList.add('hidden');
-      resultsNode.childNodes.forEach(function (node) { node.remove(); });
+      removeAllChildNodes(resultsNode);
       results.forEach(function (book) {
         resultsNode.appendChild(bookToNode(book));
       });
@@ -161,6 +188,12 @@ try {
   function pluralize(num, singular, plural) {
     if (num == 1) return '' + num + ' ' + singular;
     return '' + num + ' ' + plural;
+  }
+
+  function removeAllChildNodes(node) {
+    for (var i = node.childNodes.length - 1; i >= 0; i--) {
+      node.childNodes[i].remove();
+    }
   }
 
   function getUrl(url) {
