@@ -10,10 +10,33 @@ body {
     font: 16px / 1.5 sans-serif;
 }
 
-h1,
-h2,
-h3 {
+h1, h2, h3 {
     line-height: 1.25;
+}
+
+a {
+    color: #008;
+}
+a:visited {
+    color: #55c;
+}
+
+.muted, .muted a {
+    color: lightgray;
+}
+
+.hidden {
+    display: none;
+}
+
+.error {
+    padding: 0.5em;
+    background-color: #f88;
+}
+
+.warning {
+    padding: 0.5em;
+    background-color: #fe5;
 }
 
 @media print {
