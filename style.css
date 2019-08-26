@@ -46,7 +46,7 @@ a:visited {
 }
 
 @font-face { font-family: 'minecraft pixel perfect'; src: url('font/Minecraft-Regular.otf'); }
-@font-face { font-family: 'minecraft pixel perfect'; src: url('font/Minecraft-Bold.otf'); font-weight: bold; }
+@font-face { font-family: 'minecraft pixel perfect'; src: url('font/Minecraft-Bold.ttf'); font-weight: bold; }
 
 .author-face {
     float: right;
