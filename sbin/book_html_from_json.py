@@ -131,10 +131,12 @@ def template_page(content, page_nr, pages_total):
         elif fcode.lower() == 'r':
             # reset segment
             styled_content += '</span>' * tags_to_close
+            styled_content += f'<span class="fmtcode">§{fcode}</span>'
             tags_to_close = 0
         else:
             # formatting segment
             styled_content += f'<span class="fmt{fcode.lower()}">'
+            styled_content += f'<span class="fmtcode">§{fcode}</span>'
             tags_to_close += 1
     styled_content = styled_content.rstrip()
     return f'<div class="page" id="page-{page_nr}">\
