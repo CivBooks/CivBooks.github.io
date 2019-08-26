@@ -9,10 +9,32 @@ re_word = re.compile(r'[A-Za-z_0-9]+')
 re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
 re_format_code = re.compile(r'§[0-9a-fA-FklmnorKLMNOR]')
 re_formatting = re.compile(r'§([0-9a-fA-FklmnorKLMNOR])|[^§]+|§')
+re_redundant_format_codes = re.compile(r'(§[0-9a-fA-FklmnorKLMNOR])+§r')
 
 
 generation_order = {k: v for v, k in enumerate(
     'Original,Copy,Copy of Copy,Tattered'.split(','))}
+generation_order.update({v: v for v in range(4)})
+generation_order[None] = 99
+
+color_code_from_name = {
+    'black': '0',
+    'dark_blue': '1',
+    'dark_green': '2',
+    'dark_aqua': '3',
+    'dark_red': '4',
+    'dark_purple': '5',
+    'gold': '6',
+    'gray': '7',
+    'dark_gray': '8',
+    'blue': '9',
+    'green': 'a',
+    'aqua': 'b',
+    'red': 'c',
+    'light_purple': 'd',
+    'yellow': 'e',
+    'white': 'f',
+}
 
 
 def write_books_htmls_from_json_paths(source_paths):
@@ -57,7 +79,8 @@ def write_books_htmls_from_json(source_file, books_index=None):
                 "signee": book_json.get("signee") or "-unsigned-",
                 "generation": book_json.get("generation"),
                 "page_count": len(book_json["pages"]),
-                "word_count": len(list(re_word.finditer(' '.join(book_json["pages"])))),
+                "word_count": len(list(re_word.finditer(' '.join(
+                    cleanup_page(page) for page in book_json["pages"])))),
             }
 
             # not necessarily original author; transcription counts as its own edition
@@ -117,7 +140,7 @@ def write_books_htmls_from_json(source_file, books_index=None):
             raise e
 
 
-def template_page(content, page_nr, pages_total):
+def template_page(content, page_nr, page_count):
     page_nr += 1  # start at 1
     styled_content = ''
     # line breaks reset all formatting
@@ -141,15 +164,15 @@ def template_page(content, page_nr, pages_total):
     styled_content = styled_content.rstrip()
     return f'<div class="page" id="page-{page_nr}">\
 <a href="#page-{page_nr}" class="page-indicator">\
-Page {page_nr} of {pages_total}</a>\
+Page {page_nr} of {page_count}</a>\
 <div class="page-content">{styled_content}</div>\
 </div>'
 
 
 def template_book(book):
-    pages_total = len(book['pages'])
+    page_count = len(book['pages'])
     html_pages = '\n'.join(
-        template_page(content, page_nr, pages_total)
+        template_page(cleanup_page(content), page_nr, page_count)
         for page_nr, content in enumerate(book['pages'])
     )
     title = book.get('item_title') or "-unsigned-"
@@ -210,7 +233,10 @@ project by <a href="https://github.com/Gjum" target="_blank" rel="noopener noref
 
 def make_safe_string(s):
     try:
-        return re_format_code.sub('', re_bad_url_chars.sub('_', s))
+        s = re_format_code.sub('', re_bad_url_chars.sub('_', s))
+        if s.endswith('.'):  # breaks urls
+            s = s[:-1]+'_'
+        return s
     except Exception as e:
         print("Can't make string safe:", repr(s), file=sys.stderr)
         raise e
@@ -222,6 +248,57 @@ def make_safe_origin(s):
     except Exception as e:
         print("Can't make origin safe:", repr(s), file=sys.stderr)
         raise e
+
+
+def cleanup_page(in_str):
+    try:
+        if in_str.startswith('"') and in_str.endswith('"') \
+                and not "\n" in in_str \
+                and ('\\n' in in_str or '\\"' in in_str or '\\\\' in in_str):
+            # TODO is this a quoted json-escaped string?
+            try:
+                return json.loads(in_str)
+            except:
+                # actually, it's just a regular page with quotes...
+                return in_str
+        curly_start, curly_end = '{\"', '\"}'
+        if not in_str.startswith(curly_start) or not in_str.endswith(curly_end):
+            return in_str
+        # it's json
+        component = json.loads(in_str)
+        return str_from_chat_component(component)
+    except Exception as e:
+        print("Error:", e, "- Raw page:", in_str, file=sys.stderr)
+        return in_str
+
+
+def str_from_chat_component(component):
+    if isinstance(component, str):
+        return component
+    fmt_codes = ''
+    if component.get('bold'):
+        fmt_codes += '§l'
+    if component.get('italic'):
+        fmt_codes += '§o'
+    if component.get('underlined'):
+        fmt_codes += '§n'
+    if component.get('strikethrough'):
+        fmt_codes += '§m'
+    if component.get('obfuscated'):
+        fmt_codes += '§k'
+    if component.get('color'):
+        fmt_codes += '§'+color_code_from_name[component['color']]
+    undo_fmt = '§r' if fmt_codes else ''
+    return fmt_codes + component.get('text', '')\
+        + ''.join(fmt_codes + str_from_chat_component(e) + undo_fmt
+                  for e in component.get('extra', [])) \
+        + undo_fmt
+
+
+def remove_redundant_formatting(in_str):
+    re_redundant_format_codes.sub('§r', in_str)  # TODO handle newlines
+    # TODO remove_redundant_formatting
+    return in_str
 
 
 if __name__ == "__main__":
