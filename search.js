@@ -105,7 +105,7 @@ try {
         // lazily computed
         var safeItemOrigin = null;
         function getSafeItemOrigin() {
-          if (safeItemOrigin === null) safeItemOrigin = book.item_origin.toLowerCase().replace(/ /g, '_').replace(/\.0$/, '');
+          if (safeItemOrigin === null) safeItemOrigin = makeSafeOrigin(book.item_origin).toLowerCase();
           return safeItemOrigin;
         }
 
@@ -157,8 +157,12 @@ try {
 
   function bookToNode(book) {
     var titleNode = document.createElement('a');
-    var safeTitle = book.item_title.replace(/[ \\%:/?&#\'\"\[\]<>()]/g, '_');
-    titleNode.setAttribute('href', 'books/' + book.signee + '/' + safeTitle + '.html');
+    var safeItemOrigin = makeSafeOrigin(book.item_origin);
+    var safeItemTitle = book.item_title.replace(/[ \\%:/?&#\'\"\[\]<>()]/g, '_');
+    titleNode.setAttribute('href', 'books/'
+      + safeItemOrigin + '/'
+      + book.signee + '/'
+      + safeItemTitle + '.html');
     titleNode.classList.add('title');
     titleNode.innerText = book.item_title;
 
@@ -174,7 +178,6 @@ try {
 
     var itemOriginNode = document.createElement('a');
     itemOriginNode.classList.add('server-name');
-    var safeItemOrigin = book.item_origin.replace(/ /g, '_').replace(/\.0$/, '');
     itemOriginNode.setAttribute('href', '?search=:server:' + safeItemOrigin);
     itemOriginNode.innerText = book.item_origin;
 
@@ -207,6 +210,10 @@ try {
     for (var i = node.childNodes.length - 1; i >= 0; i--) {
       node.childNodes[i].remove();
     }
+  }
+
+  function makeSafeOrigin(origin) {
+    return origin.replace(/ /g, '_').replace(/\.0$/, '');
   }
 
   function getUrl(url) {

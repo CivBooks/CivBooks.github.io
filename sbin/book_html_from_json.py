@@ -5,15 +5,15 @@ import sys
 
 books_root = 'books'
 
-re_word = re.compile(r'[A-Za-z]+')
+re_word = re.compile(r'[A-Za-z_0-9]+')
 
 generation_order = {k: v for v, k in enumerate(
     'Original,Copy,Copy of Copy,Tattered'.split(','))}
 
 
 def write_books_htmls_from_json_paths(source_paths):
+    # f'{safe_origin}/{signee}/{safe_title}'.lower() -> book_json
     index = {}
-    # f'{signee}/{safe_title}' -> book_json
     index_json_path = f'{books_root}/index.json'
     try:
         with open(index_json_path, 'r') as f:
@@ -36,9 +36,14 @@ def write_books_htmls_from_json(source_file, books_index=None):
             if not line:
                 continue
             book_json = json.loads(line)
-            # TODO fake title from first couple words of the book
-            if "-unsigned-" == (book_json.get('item_title') or "-unsigned-"):
+            if not book_json.get('item_origin'):
+                raise Exception(f'No item_origin in book. Line {line_nr}')
+            if not book_json.get('item_title'):
                 print(f'Skipping untitled book at line {line_nr} with {len(book_json["pages"])} pages'
+                      + f' in {book_json["item_origin"]}', file=sys.stderr)
+                continue
+            if not book_json.get('signee'):
+                print(f'Skipping unsigned book at line {line_nr} with {len(book_json["pages"])} pages'
                       + f' in {book_json["item_origin"]}', file=sys.stderr)
                 continue
 
@@ -48,15 +53,17 @@ def write_books_htmls_from_json(source_file, books_index=None):
                 "signee": book_json.get("signee") or "-unsigned-",
                 "generation": book_json.get("generation"),
                 "page_count": len(book_json["pages"]),
-                "word_count": len(list(re_word.finditer(''.join(book_json["pages"])))),
+                "word_count": len(list(re_word.finditer(' '.join(book_json["pages"])))),
             }
 
             # not necessarily original author; transcription counts as its own edition
             signee = book_json.get("signee") or "-unsigned-"
-            safe_title = safe_string(
+            safe_title = make_safe_string(
                 book_json.get("item_title") or "-unsigned-")
-            dir_path = f'{books_root}/{signee}'
+            safe_origin = make_safe_origin(book_json['item_origin'])
+            dir_path = f'{books_root}/{safe_origin}/{signee}'
             page_path = f'{dir_path}/{safe_title}.html'
+            index_key = f'{safe_origin}/{signee}/{safe_title}'.lower()
 
             # TODO check if exists, add suffix, prompt to check manually
             # TODO if 10 books in a window of 20 trigger an increment, abort
@@ -67,7 +74,7 @@ def write_books_htmls_from_json(source_file, books_index=None):
                     f'Name collision at line {line_nr} "{book_json.get("item_title") or "-unsigned-"}"')
                 write = False
                 if books_index is not None:
-                    prev = books_index[f"{signee}/{safe_title.lower()}"]
+                    prev = books_index[index_key]
                     differing = []
                     for k, curr_val in index_book_json.items():
                         if curr_val != prev[k]:
@@ -100,7 +107,7 @@ def write_books_htmls_from_json(source_file, books_index=None):
                 with open(page_path, 'w') as file_html:
                     file_html.write(book_html)
             if books_index is not None:
-                books_index[f'{signee}/{safe_title.lower()}'] = index_book_json
+                books_index[index_key] = index_book_json
         except Exception as e:
             print("Error in line", line_nr, file=sys.stderr)
             raise e
@@ -148,7 +155,7 @@ def template_book(book):
     author = book.get('author')
     author_or_signee = book.get('author') or signee
     item_origin = book['item_origin']
-    safe_origin = item_origin.replace(' ', '_').replace('.0', '')
+    safe_origin = make_safe_origin(item_origin)
 
     head_img = '' if not author_or_signee else \
         f'<a href="https://minecraft-statistic.net/en/player/{author_or_signee}.html" \
@@ -158,32 +165,33 @@ title="Face of {author_or_signee}" alt="Face of {author_or_signee}"></a>'
 
     author_html = '' if not author else \
         f'<div class="author">Written by <a class="author-name" \
-href="../../?search=:author:{author}">{author}</a></div>'
+href="../../../?search=:author:{author}">{author}</a></div>'
     signee_html = '' if signee == author or signee == "-unsigned-" else \
         f'<div class="signee">Signed by <a class="signee-name" \
-href="../../?search=:signee:{signee}">{signee}</a></div>'
+href="../../../?search=:signee:{signee}">{signee}</a></div>'
 
     return f'''<!DOCTYPE html><html lang="en">
 <head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title} - by {author_or_signee} - Civ Books</title>
-    <link rel="prefetch" href="../../font/Minecraft-Regular.otf">
-    <link rel="prefetch" href="../../img/page.png">
-    <link rel="stylesheet" href="../../style.css">
+    <link rel="prefetch" href="../../../font/Minecraft-Regular.otf">
+    <link rel="prefetch" href="../../../img/page.png">
+    <link rel="stylesheet" href="../../../style.css">
     <meta property="og:type" content="object" />
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="Signed by {signee} on {item_origin}. Read all {page_count} pages here and discover more Civ books." />
     <meta property="og:site_name" content="Civ Books" />
 	<meta property="og:url" content="https://CivBooks.github.io/" />
 	<meta property="og:image" content="https://CivBooks.github.io/img/icon.png" />
-	<link rel="shortcut icon" href="img/icon.png">
+	<link rel="shortcut icon" href="../../../img/icon.png">
 </head><body>
-<a class="back-home" href="../../">Civ Books</a>
+<img src="../../../img/icon.png" width="64px" alt="Civ Books Logo" style="float: right" />
+<a class="back-home" href="../../../">Civ Books</a>
 <h1>{title}</h1>
 {head_img}
 {author_html}
 {signee_html}
-<div class="source">on <a class="source-server" href="../../?search=:server:{safe_origin}">{item_origin}</a></div>
+<div class="source">on <a class="source-server" href="../../../?search=:server:{safe_origin}">{item_origin}</a></div>
 <div class="book">
 {html_pages}
 </div>
@@ -191,20 +199,28 @@ href="../../?search=:signee:{signee}">{signee}</a></div>'
 <p>Part of the <a href="https://github.com/CivBooks" target="_blank" rel="noopener noreferrer">Civ Books</a>
 project by <a href="https://github.com/Gjum" target="_blank" rel="noopener noreferrer">Gjum</a>.
 </p>
-<img src="../../img/icon.png" width="64px" alt="Civ Books Logo" />
+<img src="../../../img/icon.png" width="64px" alt="Civ Books Logo" />
 </footer>
-<script defer src="../../book.js"></script>
+<script defer src="../../../book.js"></script>
 </body></html>'''
 
 
 re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
 
 
-def safe_string(s):
+def make_safe_string(s):
     try:
         return re_bad_url_chars.sub('_', s)
     except Exception as e:
         print("Can't make string safe:", repr(s), file=sys.stderr)
+        raise e
+
+
+def make_safe_origin(s):
+    try:
+        return s.replace(' ', '_').replace('.0', '')
+    except Exception as e:
+        print("Can't make origin safe:", repr(s), file=sys.stderr)
         raise e
 
 
