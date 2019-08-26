@@ -6,6 +6,10 @@ import sys
 books_root = 'books'
 
 re_word = re.compile(r'[A-Za-z_0-9]+')
+re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
+re_format_code = re.compile(r'§[0-9a-fA-FklmnorKLMNOR]')
+re_formatting = re.compile(r'§([0-9a-fA-FklmnorKLMNOR])|[^§]+|§')
+
 
 generation_order = {k: v for v, k in enumerate(
     'Original,Copy,Copy of Copy,Tattered'.split(','))}
@@ -113,9 +117,6 @@ def write_books_htmls_from_json(source_file, books_index=None):
             raise e
 
 
-re_formatting = re.compile(r'§([0-9a-fA-FklmnorKLMNOR])|[^§]+|§')
-
-
 def template_page(content, page_nr, pages_total):
     page_nr += 1  # start at 1
     styled_content = ''
@@ -205,12 +206,9 @@ project by <a href="https://github.com/Gjum" target="_blank" rel="noopener noref
 </body></html>'''
 
 
-re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
-
-
 def make_safe_string(s):
     try:
-        return re_bad_url_chars.sub('_', s)
+        return re_format_code.sub('', re_bad_url_chars.sub('_', s))
     except Exception as e:
         print("Can't make string safe:", repr(s), file=sys.stderr)
         raise e

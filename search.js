@@ -143,7 +143,11 @@ try {
         searchStatusNode.innerText = 'Displaying all ' + results.length + ' results.';
       }
 
-      results.sort(function (a, b) { return (a.item_title || '').localeCompare(b.item_title) });
+      results.sort(function (a, b) {
+        var aTitle = (a.item_title || '').replace(re_format_code, '');
+        var bTitle = (b.item_title || '').replace(re_format_code, '');
+        return aTitle.localeCompare(bTitle);
+      });
       removeAllChildNodes(resultsNode);
       results.forEach(function (book) {
         resultsNode.appendChild(bookToNode(book));
@@ -155,16 +159,19 @@ try {
     });
   }
 
+  var re_bad_url_chars = /[ \\%:/?&#\'\"\[\]<>()]/g;
+  var re_format_code = /§[0-9a-fklmnor]/gi;
+
   function bookToNode(book) {
     var titleNode = document.createElement('a');
     var safeItemOrigin = makeSafeOrigin(book.item_origin);
-    var safeItemTitle = book.item_title.replace(/[ \\%:/?&#\'\"\[\]<>()]/g, '_');
+    var safeItemTitle = book.item_title.replace(re_bad_url_chars, '_').replace(re_format_code, '');
     titleNode.setAttribute('href', 'books/'
       + safeItemOrigin + '/'
       + book.signee + '/'
       + safeItemTitle + '.html');
     titleNode.classList.add('title');
-    titleNode.innerText = book.item_title;
+    titleNode.innerText = book.item_title.replace(re_format_code, '');
 
     var signeeNameNode = document.createElement('a');
     signeeNameNode.classList.add('signee-name');
