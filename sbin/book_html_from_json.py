@@ -8,7 +8,7 @@ books_root = 'books'
 re_word = re.compile(r'[A-Za-z_0-9]+')
 re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
 re_format_code = re.compile(r'§[0-9a-fA-FklmnorKLMNOR]')
-re_formatting = re.compile(r'§([0-9a-fA-FklmnorKLMNOR])|[^§]+|§')
+re_formatting = re.compile(r'§([0-9a-fA-FklmnorKLMNOR])|\n|[^§]+|§')
 re_redundant_format_codes = re.compile(r'(§[0-9a-fA-FklmnorKLMNOR])+§r')
 
 
@@ -144,13 +144,18 @@ def template_page(content, page_nr, page_count):
     page_nr += 1  # start at 1
     styled_content = ''
     # line breaks reset all formatting
-    content_with_resets = content.replace('\n', '§r\n') + '\n'
     tags_to_close = 0  # number of </span> to insert at next §r
-    for match in re_formatting.finditer(content_with_resets):
+    for match in re_formatting.finditer(content):
+        fullmatch = match.group(0)
         fcode = match.group(1)
-        if not fcode:
+        if not fcode and fullmatch != '\n':
             # content segment
-            styled_content += match.group(0)
+            styled_content += fullmatch
+        elif fullmatch == '\n':
+            # newline reset
+            styled_content += '</span>' * tags_to_close
+            styled_content += '\n'
+            tags_to_close = 0
         elif fcode.lower() == 'r':
             # reset segment
             styled_content += '</span>' * tags_to_close
