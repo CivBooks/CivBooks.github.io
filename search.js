@@ -91,14 +91,8 @@ try {
     });
 
     indexJsonPromise.then(function (indexJson) {
-      var resultSlotsLeft = maxResultsCount;
-      var hasMoreResults = false; // true if a maxResultsCount+1 'th book is found
-
-      var results = Object.keys(indexJson).map(function (key) { return indexJson[key]; }).filter(filter)
-      function filter(book) {
-        // -1 to check one more book
-        if (resultSlotsLeft <= -1) return false;
-
+      var results = Object.keys(indexJson).map(function (key) { return indexJson[key]; }).filter(searchFilter);
+      function searchFilter(book) {
         if (querySignees.length > 0) {
           if (!querySignees.includes(book.signee.toLowerCase())) return false;
         }
@@ -128,20 +122,14 @@ try {
         if (!hasAllWords) return false;
 
         // it's a match!
-        resultSlotsLeft -= 1;
-        if (resultSlotsLeft <= -1) {
-          hasMoreResults = true;
-          return false; // don't show this book, it's above the result count limit
-        }
         return true;
       }
 
       if (results.length <= 0) {
         searchStatusNode.innerText = 'No books match that search. Try something else?';
-      } else if (hasMoreResults) {
-        searchStatusNode.innerText = 'Displaying only the first ' + maxResultsCount + ' results.';
+        return;
       } else {
-        searchStatusNode.innerText = 'Displaying all ' + results.length + ' results.';
+        searchStatusNode.innerText = 'Found ' + results.length + ' matching books.';
       }
 
       results.sort(function (a, b) {
@@ -150,10 +138,23 @@ try {
         return aTitle.localeCompare(bTitle);
       });
       removeAllChildNodes(resultsNode);
-      results.forEach(function (book) {
+      results.slice(0, maxResultsCount).forEach(function (book) {
         resultsNode.appendChild(bookToNode(book));
       });
       resultsNode.classList.remove('hidden');
+      // give the browser a chance to render the first results
+      setTimeout(function () {
+        var numRemaining = results.length - maxResultsCount;
+        if (numRemaining <= 0) return;
+        var detailsNode = document.createElement('details');
+        var summaryNode = document.createElement('summary');
+        summaryNode.innerText = 'Show remaining ' + numRemaining + ' results';
+        detailsNode.appendChild(summaryNode);
+        results.slice(maxResultsCount).forEach(function (book) {
+          detailsNode.appendChild(bookToNode(book));
+        });
+        resultsNode.appendChild(detailsNode);
+      }, 0);
     }).catch(function (error) {
       resultsNode.classList.remove('hidden');
       searchStatusNode.innerText = 'Error while searching: ' + error;
