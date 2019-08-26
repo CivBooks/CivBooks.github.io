@@ -184,8 +184,8 @@ href="../../../?search=:signee:{signee}">{signee}</a></div>'
 	<meta property="og:url" content="https://CivBooks.github.io/" />
 	<meta property="og:image" content="https://CivBooks.github.io/img/icon.png" />
 	<link rel="shortcut icon" href="../../../img/icon.png">
-</head><body>
-<img src="../../../img/icon.png" width="64px" alt="Civ Books Logo" style="float: right" />
+</head><body id="top">
+<img src="../../../img/icon.png" width="48px" alt="Civ Books Logo" style="float: right" />
 <a class="back-home" href="../../../">Civ Books</a>
 <h1>{title}</h1>
 {head_img}
@@ -199,7 +199,7 @@ href="../../../?search=:signee:{signee}">{signee}</a></div>'
 <p>Part of the <a href="https://github.com/CivBooks" target="_blank" rel="noopener noreferrer">Civ Books</a>
 project by <a href="https://github.com/Gjum" target="_blank" rel="noopener noreferrer">Gjum</a>.
 </p>
-<img src="../../../img/icon.png" width="64px" alt="Civ Books Logo" />
+<a href="#top"><img src="../../../img/icon.png" width="64px" alt="Civ Books Logo" /></a>
 </footer>
 <script defer src="../../../book.js"></script>
 </body></html>'''
