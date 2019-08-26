@@ -40,7 +40,7 @@ try {
   function getIndexJson() {
     if (!indexJsonPromise) {
       indexJsonPromise = new Promise(function (onData, onErr) {
-        getUrl('books/index.json').then(JSON.parse).then(onData, onErr);
+        getUrl('books/metadata.json').then(JSON.parse).then(onData, onErr);
       });
     }
     return indexJsonPromise;

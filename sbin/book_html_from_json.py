@@ -40,7 +40,7 @@ color_code_from_name = {
 def write_books_htmls_from_json_paths(source_paths):
     # f'{safe_origin}/{signee}/{safe_title}'.lower() -> book_json
     index = {}
-    index_json_path = f'{books_root}/index.json'
+    index_json_path = f'{books_root}/metadata.json'
     try:
         with open(index_json_path, 'r') as f:
             index = json.load(f)
