@@ -49,7 +49,8 @@ try {
   function updateSearchResults(query, maxResultsCount) {
     maxResultsCount = +maxResultsCount || 20;
     // get query from arg or text box, ensure it's a string
-    query = '' + (query || document.getElementById('query').value);
+    query = query || document.getElementById('query').value;
+    query = ('' + query).trim();
     // set text box content to query
     document.getElementById('query').value = query;
     // reflect query in title
