@@ -57,7 +57,7 @@ try {
     if (query) document.title = 'Search: ' + query + ' - Civ Books';
     else document.title = 'Civ Books';
     // set url to search for query
-    if (!location.search.match(new RegExp('[?&]search=' + encodeURIComponent(query) + '($|&)'))) {
+    if (location.search.match(/[?&]search=([^&]+)($|&)/)[1] !== encodeURIComponent(query)) {
       var nextUrl = location.origin + location.pathname;
       if (query) nextUrl += "?search=" + encodeURIComponent(query);
       nextUrl += location.hash;
@@ -81,6 +81,7 @@ try {
 
     var queryServers = [];
     var querySignees = [];
+    var queryInTitle = [];
     var queryWords = [];
     var queryMinPages = 0;
     var queryMaxPages = 9999999;
@@ -91,6 +92,7 @@ try {
       word = word.toLowerCase();
       if (word.startsWith(':server:')) queryServers.push(word.replace(':server:', ''));
       else if (word.startsWith(':signee:')) querySignees.push(word.replace(':signee:', ''));
+      else if (word.startsWith(':intitle:')) queryInTitle.push(word.replace(':intitle:', ''));
       else if (word.startsWith(':minpages:')) queryMinPages = parseInt(word.replace(':minpages:', ''));
       else if (word.startsWith(':maxpages:')) queryMaxPages = parseInt(word.replace(':maxpages:', ''));
       else if (word.startsWith(':minwords:')) queryMinWords = parseInt(word.replace(':minwords:', ''));
@@ -103,8 +105,18 @@ try {
       function searchFilter(book) {
         if (queryMinPages > book.page_count || book.page_count > queryMaxPages) return false;
         if (queryMinWords > book.word_count || book.word_count > queryMaxWords) return false;
+
         if (querySignees.length > 0) {
           if (!querySignees.includes(book.signee.toLowerCase())) return false;
+        }
+
+        if (queryInTitle.length > 0) {
+          var hasAllTitleParts = true;
+          var titleLower = book.item_title.toLowerCase();
+          queryInTitle.forEach(function (titlePart) {
+            if (!titleLower.includes(titlePart)) hasAllTitleParts = false;
+          });
+          if (!hasAllTitleParts) return false;
         }
 
         // lazily computed
@@ -177,7 +189,7 @@ try {
   function bookToNode(book) {
     var titleNode = document.createElement('a');
     var safeItemOrigin = makeSafeOrigin(book.item_origin);
-    var safeItemTitle = book.item_title.replace(re_bad_url_chars, '_').replace(re_format_code, '');
+    var safeItemTitle = makeSafeTitle(book.item_title);
     titleNode.setAttribute('href', 'books/'
       + safeItemOrigin + '/'
       + book.signee + '/'
@@ -231,13 +243,19 @@ try {
     }
   }
 
+  function makeSafeTitle(title) {
+    title = title.replace(re_bad_url_chars, '_').replace(re_format_code, '');
+    if (/^\.+$/.test(title)) title = title.substr(0, title.length - 1) + '_';
+    return title;
+  }
+
   function makeSafeOrigin(origin) {
     return origin.replace(/ /g, '_').replace(/\.0$/, '');
   }
 
   function getUrl(url) {
-    try {
-      return new Promise(function (onData, onErr) {
+    return new Promise(function (onData, onErr) {
+      try {
         var request = new XMLHttpRequest();
         request.open('GET', url, true);
         request.onabort = function (e) { onErr('abort'); };
@@ -254,10 +272,10 @@ try {
         }
         request.send();
         request = null;
-      });
-    } catch (e) {
-      onErr(e);
-    }
+      } catch (e) {
+        onErr(e);
+      }
+    });
   }
 
 } catch (e) {
