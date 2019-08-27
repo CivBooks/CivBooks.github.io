@@ -82,17 +82,27 @@ try {
     var queryServers = [];
     var querySignees = [];
     var queryWords = [];
+    var queryMinPages = 0;
+    var queryMaxPages = 9999999;
+    var queryMinWords = 0;
+    var queryMaxWords = 9999999;
 
     ('' + query).split(' ').forEach(function (word) {
       word = word.toLowerCase();
       if (word.startsWith(':server:')) queryServers.push(word.replace(':server:', ''));
       else if (word.startsWith(':signee:')) querySignees.push(word.replace(':signee:', ''));
+      else if (word.startsWith(':minpages:')) queryMinPages = parseInt(word.replace(':minpages:', ''));
+      else if (word.startsWith(':maxpages:')) queryMaxPages = parseInt(word.replace(':maxpages:', ''));
+      else if (word.startsWith(':minwords:')) queryMinWords = parseInt(word.replace(':minwords:', ''));
+      else if (word.startsWith(':maxwords:')) queryMaxWords = parseInt(word.replace(':maxwords:', ''));
       else queryWords.push(word);
     });
 
     indexJsonPromise.then(function (indexJson) {
       var results = Object.keys(indexJson).map(function (key) { return indexJson[key]; }).filter(searchFilter);
       function searchFilter(book) {
+        if (queryMinPages > book.page_count || book.page_count > queryMaxPages) return false;
+        if (queryMinWords > book.word_count || book.word_count > queryMaxWords) return false;
         if (querySignees.length > 0) {
           if (!querySignees.includes(book.signee.toLowerCase())) return false;
         }
