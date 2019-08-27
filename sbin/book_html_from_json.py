@@ -6,6 +6,8 @@ import sys
 books_root = 'books'
 
 re_word = re.compile(r'[A-Za-z_0-9]+')
+re_mc_name_with_fmt_codes = re.compile(r'[§A-Za-z_0-9]+')
+re_all_dots = re.compile(r'^\.+$')
 re_bad_url_chars = re.compile(r'[ \\%:/?&#\'\"\[\]<>()]')
 re_format_code = re.compile(r'§[0-9a-fA-FklmnorKLMNOR]')
 re_formatting = re.compile(r'§([0-9a-fA-FklmnorKLMNOR])|\n|[^§]+|§')
@@ -55,7 +57,7 @@ def write_books_htmls_from_json_paths(source_paths):
         json.dump(index, f, separators=(',', ':'))
 
 
-def write_books_htmls_from_json(source_file, books_index=None):
+def write_books_htmls_from_json(source_file, books_metadata=None):
     for line_nr, line in enumerate(source_file):
         try:
             line = line.strip()
@@ -63,17 +65,23 @@ def write_books_htmls_from_json(source_file, books_index=None):
                 continue
             book_json = json.loads(line)
             if not book_json.get('item_origin'):
-                raise Exception(f'No item_origin in book. Line {line_nr}')
+                raise Exception(
+                    f'No item_origin in book. Line {line_nr} {line}')
             if not book_json.get('item_title'):
                 print(f'Skipping untitled book at line {line_nr} with {len(book_json["pages"])} pages'
                       + f' in {book_json["item_origin"]}', file=sys.stderr)
                 continue
-            if not book_json.get('signee'):
+            if book_json.get('signee') in [None, '', ' ']:
                 print(f'Skipping unsigned book at line {line_nr} with {len(book_json["pages"])} pages'
                       + f' in {book_json["item_origin"]}', file=sys.stderr)
                 continue
 
-            index_book_json = {
+            signee = book_json.get("signee") or "-unsigned-"
+            if not re_mc_name_with_fmt_codes.match(signee):
+                raise Exception(
+                    f'Invalid signee "{signee}" in line {line_nr} {line}')
+
+            book_json_metadata = {
                 "item_origin": book_json["item_origin"],
                 "item_title": book_json.get("item_title") or "-unsigned-",
                 "signee": book_json.get("signee") or "-unsigned-",
@@ -83,8 +91,6 @@ def write_books_htmls_from_json(source_file, books_index=None):
                     cleanup_page(page) for page in book_json["pages"])))),
             }
 
-            # not necessarily original author; transcription counts as its own edition
-            signee = book_json.get("signee") or "-unsigned-"
             safe_title = make_safe_string(
                 book_json.get("item_title") or "-unsigned-")
             safe_origin = make_safe_origin(book_json['item_origin'])
@@ -100,10 +106,10 @@ def write_books_htmls_from_json(source_file, books_index=None):
                 warn_lines.append(
                     f'Name collision at line {line_nr} "{book_json.get("item_title") or "-unsigned-"}"')
                 write = False
-                if books_index is not None:
-                    prev = books_index[index_key]
+                if books_metadata is not None:
+                    prev = books_metadata[index_key]
                     differing = []
-                    for k, curr_val in index_book_json.items():
+                    for k, curr_val in book_json_metadata.items():
                         if curr_val != prev[k]:
                             differing.append(k)
                             warn_lines.append(
@@ -111,14 +117,14 @@ def write_books_htmls_from_json(source_file, books_index=None):
                     if differing == []:
                         # probably identical TODO compare full contents
                         write = False
-                    elif prev['page_count'] < index_book_json['page_count']:
+                    elif prev['page_count'] < book_json_metadata['page_count']:
                         # prev is shorter; overwrite
                         write = True
-                    elif prev['page_count'] > index_book_json['page_count']:
+                    elif prev['page_count'] > book_json_metadata['page_count']:
                         # prev is longer; leave alone
                         write = False
                     elif differing == ['generation']:
-                        if generation_order[prev['generation']] > generation_order[index_book_json['generation']]:
+                        if generation_order[prev['generation']] > generation_order[book_json_metadata['generation']]:
                             # prev is worse; overwrite
                             write = True
                         else:  # prev is better; leave alone
@@ -133,10 +139,10 @@ def write_books_htmls_from_json(source_file, books_index=None):
                 book_html = template_book(book_json)
                 with open(page_path, 'w') as file_html:
                     file_html.write(book_html)
-            if books_index is not None:
-                books_index[index_key] = index_book_json
+            if books_metadata is not None:
+                books_metadata[index_key] = book_json_metadata
         except Exception as e:
-            print("Error in line", line_nr, file=sys.stderr)
+            print("Error in line", line_nr, line.strip(), file=sys.stderr)
             raise e
 
 
@@ -239,7 +245,7 @@ project by <a href="https://github.com/Gjum" target="_blank" rel="noopener noref
 def make_safe_string(s):
     try:
         s = re_format_code.sub('', re_bad_url_chars.sub('_', s))
-        if s.endswith('.'):  # breaks urls
+        if re_all_dots.match(s):  # breaks urls
             s = s[:-1]+'_'
         return s
     except Exception as e:
