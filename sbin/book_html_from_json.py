@@ -216,7 +216,7 @@ href="../../../?search=:signee:{signee}">{signee}</a></div>'
 	<meta property="og:image" content="https://CivBooks.github.io/img/icon.png" />
 	<link rel="shortcut icon" href="../../../img/icon.png">
 </head><body id="top">
-<img src="../../../img/icon.png" width="48px" alt="Civ Books Logo" style="float: right" />
+<a href="../../../"><img src="../../../img/icon.png" width="48px" alt="Civ Books Logo" style="float: right" /></a>
 <a class="back-home" href="../../../">Civ Books</a>
 <h1>{title}</h1>
 {head_img}
