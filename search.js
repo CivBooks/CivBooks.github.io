@@ -57,9 +57,10 @@ try {
     if (query) document.title = 'Search: ' + query + ' - Civ Books';
     else document.title = 'Civ Books';
     // set url to search for query
-    if (location.search.match(/[?&]search=([^&]+)($|&)/)[1] !== encodeURIComponent(query)) {
+    var encodedQuery = encodeURIComponent(query).replace(/%3A/g, ':');
+    if ((location.search.match(/[?&]search=([^&]+)($|&)/) || [])[1] !== encodedQuery) {
       var nextUrl = location.origin + location.pathname;
-      if (query) nextUrl += "?search=" + encodeURIComponent(query);
+      if (query) nextUrl += "?search=" + encodedQuery;
       nextUrl += location.hash;
       // prevent page reload
       history.pushState(null, document.title, nextUrl);
