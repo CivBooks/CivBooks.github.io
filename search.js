@@ -155,7 +155,9 @@ try {
         searchStatusNode.innerText = 'Found ' + results.length + ' matching books.';
       }
 
+      // sort by word count, then title
       results.sort(function (a, b) {
+        if (a.word_count != b.word_count) return b.word_count - a.word_count;
         var aTitle = (a.item_title || '').replace(re_format_code, '');
         var bTitle = (b.item_title || '').replace(re_format_code, '');
         return aTitle.localeCompare(bTitle);
