@@ -271,7 +271,8 @@ def cleanup_pages(book_json):
     is_json = all((
         (page == ""
          or page.startswith('"') and page.endswith('"')
-         or page.startswith('{"') and page.endswith('"}'))
+         or page.startswith('{"') and page.endswith('"}')
+         or page == 'null')
         and not "\n" in page)
         for page in book_json["pages"])
     return [cleanup_page(page, is_json) for page in book_json["pages"]]
@@ -294,6 +295,7 @@ def cleanup_page(in_str, is_json):
 
 
 def str_from_chat_component(component):
+    if component is None: return ''
     if isinstance(component, str):
         return component
     fmt_codes = ''
