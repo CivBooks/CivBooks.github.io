@@ -81,14 +81,15 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
                 raise Exception(
                     f'Invalid signee "{signee}" in line {line_nr} {line}')
 
+            book_json["clean_pages"] = cleanup_pages(book_json)
+
             book_json_metadata = {
                 "item_origin": book_json["item_origin"],
                 "item_title": book_json.get("item_title") or "-unsigned-",
                 "signee": book_json.get("signee") or "-unsigned-",
                 "generation": book_json.get("generation"),
                 "page_count": len(book_json["pages"]),
-                "word_count": len(list(re_word.finditer(' '.join(
-                    cleanup_page(page) for page in book_json["pages"])))),
+                "word_count": len(list(re_word.finditer(' '.join(book_json["clean_pages"])))),
             }
 
             safe_title = make_safe_string(
@@ -181,18 +182,21 @@ Page {page_nr} of {page_count}</a>\
 
 
 def template_book(book):
-    page_count = len(book['pages'])
+    clean_pages = book['clean_pages']
+    page_count = len(clean_pages)
     html_pages = '\n'.join(
-        template_page(cleanup_page(content), page_nr, page_count)
-        for page_nr, content in enumerate(book['pages'])
+        template_page(clean_page, page_nr, page_count)
+        for page_nr, clean_page in enumerate(clean_pages)
     )
     title = book.get('item_title') or "-unsigned-"
-    page_count = len(book['pages'])
     signee = book.get('signee') or "-unsigned-"
-    author = book.get('author')
-    author_or_signee = book.get('author') or signee
+    content_author = book.get('content_author')
+    author_or_signee = content_author or signee
     item_origin = book['item_origin']
     safe_origin = make_safe_origin(item_origin)
+
+    description = f'Signed by {signee} on {item_origin}.' \
+        + f" Read {'it' if page_count <= 1 else f'all {page_count} pages'} here and discover more Civ books."
 
     head_img = '' if not author_or_signee else \
         f'<a href="https://minecraft-statistic.net/en/player/{author_or_signee}.html" \
@@ -200,10 +204,10 @@ target="_blank" rel="noopener noreferrer">\
 <img class="author-face" src="https://www.mc-heads.net/avatar/{author_or_signee}" \
 title="Face of {author_or_signee}" alt="Face of {author_or_signee}"></a>'
 
-    author_html = '' if not author else \
+    author_html = '' if not content_author else \
         f'<div class="author">Written by <a class="author-name" \
-href="../../../?search=:author:{author}">{author}</a></div>'
-    signee_html = '' if signee == author or signee == "-unsigned-" else \
+href="../../../?search=:author:{content_author}">{content_author}</a></div>'
+    signee_html = '' if signee == content_author or signee == "-unsigned-" else \
         f'<div class="signee">Signed by <a class="signee-name" \
 href="../../../?search=:signee:{signee}">{signee}</a></div>'
 
@@ -216,7 +220,7 @@ href="../../../?search=:signee:{signee}">{signee}</a></div>'
     <link rel="stylesheet" href="../../../style.css">
     <meta property="og:type" content="object" />
     <meta property="og:title" content="{title}" />
-    <meta property="og:description" content="Signed by {signee} on {item_origin}. Read all {page_count} pages here and discover more Civ books." />
+    <meta property="og:description" content="{description}" />
     <meta property="og:site_name" content="Civ Books" />
 	<meta property="og:url" content="https://CivBooks.github.io/" />
 	<meta property="og:image" content="https://CivBooks.github.io/img/icon.png" />
@@ -261,26 +265,32 @@ def make_safe_origin(s):
         raise e
 
 
-def cleanup_page(in_str):
+def cleanup_pages(book_json):
+    if 'pages' not in book_json:
+        return []
+    is_json = all((
+        (page == ""
+         or page.startswith('"') and page.endswith('"')
+         or page.startswith('{"') and page.endswith('"}'))
+        and not "\n" in page)
+        for page in book_json["pages"])
+    return [cleanup_page(page, is_json) for page in book_json["pages"]]
+
+
+def cleanup_page(in_str, is_json):
     try:
-        if in_str.startswith('"') and in_str.endswith('"') \
-                and not "\n" in in_str \
-                and ('\\n' in in_str or '\\"' in in_str or '\\\\' in in_str):
-            # TODO is this a quoted json-escaped string?
-            try:
-                return json.loads(in_str)
-            except:
-                # actually, it's just a regular page with quotes...
-                return in_str
-        curly_start, curly_end = '{\"', '\"}'
-        if not in_str.startswith(curly_start) or not in_str.endswith(curly_end):
+        if not is_json:
             return in_str
         # it's json
-        component = json.loads(in_str)
+        try:
+            component = json.loads(in_str)
+        except json.JSONDecodeError:
+            # actually, it's just a regular page with weird quotes/escapes
+            return in_str
         return str_from_chat_component(component)
     except Exception as e:
         print("Error:", e, "- Raw page:", in_str, file=sys.stderr)
-        return in_str
+        raise e
 
 
 def str_from_chat_component(component):
