@@ -38,6 +38,14 @@ color_code_from_name = {
     'white': 'f',
 }
 
+blacklist = []
+
+try:
+    with open('blacklist.re', 'r') as f:
+        blacklist = [re.compile(line.strip().lower()) for line in f]
+except:
+    pass
+
 
 def write_books_htmls_from_json_paths(source_paths):
     # f'{safe_origin}/{signee}/{safe_title}'.lower() -> book_json
@@ -71,6 +79,7 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
                 print(f'Skipping untitled book at line {line_nr} with {len(book_json["pages"])} pages'
                       + f' in {book_json["item_origin"]}', file=sys.stderr)
                 continue
+
             if book_json.get('signee') in [None, '', ' ']:
                 print(f'Skipping unsigned book at line {line_nr} with {len(book_json["pages"])} pages'
                       + f' in {book_json["item_origin"]}', file=sys.stderr)
@@ -80,6 +89,16 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
             if not re_mc_name_with_fmt_codes.match(signee):
                 raise Exception(
                     f'Invalid signee "{signee}" in line {line_nr} {line}')
+
+            safe_title = make_safe_string(
+                book_json.get("item_title") or "-unsigned-")
+            safe_origin = make_safe_origin(book_json['item_origin'])
+            dir_path = f'{books_root}/{safe_origin}/{signee}'
+            page_path = f'{dir_path}/{safe_title}.html'
+            index_key = f'{safe_origin}/{signee}/{safe_title}'.lower()
+
+            if any(re_black.match(index_key) for re_black in blacklist):
+                continue
 
             book_json["clean_pages"] = cleanup_pages(book_json)
 
@@ -91,13 +110,6 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
                 "page_count": len(book_json["pages"]),
                 "word_count": len(list(re_word.finditer(' '.join(book_json["clean_pages"])))),
             }
-
-            safe_title = make_safe_string(
-                book_json.get("item_title") or "-unsigned-")
-            safe_origin = make_safe_origin(book_json['item_origin'])
-            dir_path = f'{books_root}/{safe_origin}/{signee}'
-            page_path = f'{dir_path}/{safe_title}.html'
-            index_key = f'{safe_origin}/{signee}/{safe_title}'.lower()
 
             # TODO check if exists, add suffix, prompt to check manually
             # TODO if 10 books in a window of 20 trigger an increment, abort
