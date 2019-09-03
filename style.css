@@ -97,8 +97,8 @@ a:visited {
     /* necessary for line breaking */
 }
 
-img.top-logo {
-    height: 96px;
+img.top-logo, img.bottom-logo {
+    width: 64px;
 }
 
 footer {
