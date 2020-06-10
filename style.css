@@ -97,6 +97,10 @@ a:visited {
     /* necessary for line breaking */
 }
 
+img.top-logo {
+    height: 96px;
+}
+
 footer {
     text-align: center;
 }
