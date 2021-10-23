@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+from unidecode import unidecode
 
 books_root = 'books'
 
@@ -62,7 +63,7 @@ def write_books_htmls_from_json_paths(source_paths):
             write_books_htmls_from_json(f, index)
 
     with open(index_json_path, 'w') as f:
-        json.dump(index, f, separators=(',', ':'))
+        f.write(json.dumps(index, separators=(',', ':')).replace("},", "},\n"))
 
 
 def write_books_htmls_from_json(source_file, books_metadata=None):
@@ -90,8 +91,12 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
                 raise Exception(
                     f'Invalid signee "{signee}" in line {line_nr} {line}')
 
+            item_name = (str_from_chat_component(json.loads(book_json.get("item_name")))
+                if book_json.get("item_name") else None)
+
             safe_title = make_safe_string(
-                book_json.get("item_title") or "-unsigned-")
+                item_name if item_name and len(item_name) > 2*len(book_json.get("item_title", ""))
+                else book_json.get("item_title") or "-unsigned-")
             safe_origin = make_safe_origin(book_json['item_origin'])
             dir_path = f'{books_root}/{safe_origin}/{signee}'
             page_path = f'{dir_path}/{safe_title}.html'
@@ -105,6 +110,7 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
             book_json_metadata = {
                 "item_origin": book_json["item_origin"],
                 "item_title": book_json.get("item_title") or "-unsigned-",
+                "item_name": item_name,
                 "signee": book_json.get("signee") or "-unsigned-",
                 "generation": book_json.get("generation"),
                 "page_count": len(book_json["pages"]),
@@ -121,6 +127,7 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
                 write = False
                 if books_metadata is not None:
                     prev = books_metadata[index_key]
+                    if 'item_name' not in prev: prev['item_name'] = None
                     differing = []
                     for k, curr_val in book_json_metadata.items():
                         if curr_val != prev[k]:
@@ -200,7 +207,11 @@ def template_book(book):
         template_page(clean_page, page_nr, page_count)
         for page_nr, clean_page in enumerate(clean_pages)
     )
-    title = book.get('item_title') or "-unsigned-"
+    item_name = (str_from_chat_component(json.loads(book.get("item_name")))
+        if book.get("item_name") else None)
+    title = (item_name
+        if item_name and len(item_name) > 2*len(book.get("item_title", ""))
+        else book.get('item_title') or "-unsigned-")
     signee = book.get('signee') or "-unsigned-"
     content_author = book.get('content_author')
     author_or_signee = content_author or signee
