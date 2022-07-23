@@ -2,7 +2,6 @@ import json
 import os
 import re
 import sys
-from unidecode import unidecode
 
 books_root = 'books'
 
@@ -174,7 +173,10 @@ def template_page(content, page_nr, page_count):
     for match in re_formatting.finditer(content):
         fullmatch = match.group(0)
         fcode = match.group(1)
-        if not fcode and fullmatch != '\n':
+        if fullmatch == '§':
+            # stray section sign with wrong format code following; invisible
+            styled_content += f'<span class="fmtcode">§</span>'
+        elif not fcode and fullmatch != '\n':
             # content segment
             styled_content += fullmatch
         elif fullmatch == '\n':
