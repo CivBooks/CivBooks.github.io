@@ -3453,4 +3453,6 @@
 "civclassic_2/gavjenks/the_assassination":{"item_origin":"CivClassic 2.0","item_title":"The Assassination","item_name":null,"signee":"Gavjenks","generation":0,"page_count":10,"word_count":407},
 "civclassic_2/bustanuht/the_assassination":{"item_origin":"CivClassic 2.0","item_title":"The Assassination","item_name":null,"signee":"BustaNuht","generation":0,"page_count":10,"word_count":407},
 "civclassic_2/sortbynode/secret_tequila":{"item_origin":"CivClassic 2.0","item_title":"Secret Tequila","item_name":null,"signee":"SortByNode","generation":0,"page_count":7,"word_count":226},
-"civclassic_2/sortbynode/swahili_cannibal":{"item_origin":"CivClassic 2.0","item_title":"Swahili Cannibal","item_name":null,"signee":"SortByNode","generation":0,"page_count":5,"word_count":179}}
+"civclassic_2/sortbynode/swahili_cannibal":{"item_origin":"CivClassic 2.0","item_title":"Swahili Cannibal","item_name":null,"signee":"SortByNode","generation":0,"page_count":5,"word_count":179},
+"civmc/amandacc/vehod_vol.1":{"item_origin":"CivMC","item_title":"VEHOD Vol.1","item_name":null,"signee":"AmandaCC","generation":null,"page_count":98,"word_count":4454},
+"civmc/amandacc/vehod_vol.2":{"item_origin":"CivMC","item_title":"VEHOD Vol.2","item_name":null,"signee":"AmandaCC","generation":null,"page_count":15,"word_count":597}}
