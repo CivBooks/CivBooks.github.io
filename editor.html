@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Book Editor</title>
+		<style>
+			@font-face {
+				font-family: "minecraft pixel perfect";
+				src: url("font/Minecraft-Regular.otf");
+			}
+			@font-face {
+				font-family: "minecraft pixel perfect";
+				src: url("font/Minecraft-Bold.ttf");
+				font-weight: bold;
+			}
+			#title,
+			#output {
+				/* this results in 200% font scale (2x2 px per font px) */
+				font: 20px / 0.9em "minecraft pixel perfect", serif;
+			}
+			#title {
+				font-size: 12px;
+			}
+
+			.page-marker {
+				color: rgba(0, 0, 0, 0.4);
+				text-align: right;
+				margin: 1em 0;
+			}
+
+			/* invisible but can be copypasted */
+			.fmtcode {
+				font-size: 0;
+				line-height: 0;
+			}
+
+			.fmtl {
+				font-weight: bold;
+			}
+			.fmto {
+				font-style: italic;
+			}
+			.fmtn {
+				text-decoration: underline;
+			}
+			.fmtm {
+				text-decoration-line: line-through;
+			}
+			.fmt4 {
+				color: #be0000;
+			}
+			.fmtc {
+				color: #fe3f3f;
+			}
+			.fmt6 {
+				color: #d9a334;
+			}
+			.fmte {
+				color: #fefe3f;
+			}
+			.fmt2 {
+				color: #00be00;
+			}
+			.fmta {
+				color: #3ffe3f;
+			}
+			.fmtb {
+				color: #3ffefe;
+			}
+			.fmt3 {
+				color: #00bebe;
+			}
+			.fmt1 {
+				color: #0000be;
+			}
+			.fmt9 {
+				color: #3f3ffe;
+			}
+			.fmtd {
+				color: #fe3ffe;
+			}
+			.fmt5 {
+				color: #be00be;
+			}
+			.fmtf {
+				color: #ffffff;
+			}
+			.fmt7 {
+				color: #bebebe;
+			}
+			.fmt8 {
+				color: #3f3f3f;
+			}
+			.fmt0 {
+				color: #000000;
+			}
+		</style>
+	</head>
+	<body style="margin: 0; font-family: sans-serif">
+		<div style="height: 100vh; display: flex; flex-direction: row">
+			<div style="flex: 1; display: flex; flex-direction: column">
+				<div
+					style="
+						margin: 8px;
+						margin-right: 0;
+						display: flex;
+						flex-direction: row;
+						flex-wrap: wrap;
+					"
+				>
+					<button
+						onclick="applyFormat('§r','')"
+						title="Insert §r which resets all previous styles."
+					>
+						Reset
+					</button>
+					<button onclick="applyFormat('§l','§r')" class="fmtl">Bold</button>
+					<button onclick="applyFormat('§o','§r')" class="fmto">Italic</button>
+					<button onclick="applyFormat('§n','§r')" class="fmtn">
+						Underline
+					</button>
+					<button onclick="applyFormat('§m','§r')" class="fmtm">Strike</button>
+					<button onclick="applyFormat('§4','§r')" class="fmt4">▇</button>
+					<button onclick="applyFormat('§c','§r')" class="fmtc">▇</button>
+					<button onclick="applyFormat('§6','§r')" class="fmt6">▇</button>
+					<button onclick="applyFormat('§e','§r')" class="fmte">▇</button>
+					<button onclick="applyFormat('§2','§r')" class="fmt2">▇</button>
+					<button onclick="applyFormat('§a','§r')" class="fmta">▇</button>
+					<button onclick="applyFormat('§b','§r')" class="fmtb">▇</button>
+					<button onclick="applyFormat('§3','§r')" class="fmt3">▇</button>
+					<button onclick="applyFormat('§1','§r')" class="fmt1">▇</button>
+					<button onclick="applyFormat('§9','§r')" class="fmt9">▇</button>
+					<button onclick="applyFormat('§d','§r')" class="fmtd">▇</button>
+					<button onclick="applyFormat('§5','§r')" class="fmt5">▇</button>
+					<button onclick="applyFormat('§f','§r')" class="fmtf">▇</button>
+					<button onclick="applyFormat('§7','§r')" class="fmt7">▇</button>
+					<button onclick="applyFormat('§8','§r')" class="fmt8">▇</button>
+					<button onclick="applyFormat('§0','§r')" class="fmt0">▇</button>
+					<button
+						onclick="applyFormat('§\n','')"
+						title="Insert §\n which ends the page even if it's not full."
+					>
+						Page Break
+					</button>
+					<button
+						onclick="applyFormat('§-','')"
+						title="Insert §- which, when it improves the layout, turns into a hyphen (-) and breaks the surrounding word."
+					>
+						Hyphen
+					</button>
+					<span style="margin-left: auto">
+						<input type="text" id="title" placeholder="Title" />
+						<input
+							type="text"
+							id="author"
+							placeholder="Author"
+							style="font-family: monospace; width: 10em"
+						/>
+					</span>
+				</div>
+				<textarea
+					autofocus
+					id="source"
+					style="padding: 8px; box-sizing: border-box; flex: 1; resize: none"
+				>
+The §lquick §4brown §ofox jumps§r over the lazy dog.
+§
+§lLorem§r ipsum dolor sit amet, consectetur adi§-piscing elit, sed do eiusmod tempor incid§-idunt ut labore et do§-lore magna aliqua. §lUt§r enim ad minim veniam, quis nostrud exerci§-tation ullamco laboris nisi ut aliquip ex ea commodo consequat. §lDuis§r aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. §lEx§-cep§-teur§r sint occaecat cupidatat non proid§-ent, sunt in culpa qui officia deserunt mollit anim id est laborum.</textarea
+				>
+			</div>
+			<div style="display: flex; flex-direction: column">
+				<div style="margin: 8px">
+					Download:
+					<a id="stendhal" title="Download book file for Stendhal mod"
+						><button onclick="setStendhalDownload()">Stendhal</button></a
+					><a id="ghostwriter" title="Download book file for Ghostwriter mod"
+						><button onclick="setGhostwriterDownload()">Ghostwriter</button></a
+					>
+				</div>
+				<div
+					style="
+						flex: 1;
+						display: flex;
+						overflow-y: scroll;
+						background-color: #fdf8eb;
+					"
+				>
+					<pre id="output" style="margin: 0; padding: 8px; width: 228px"></pre>
+				</div>
+			</div>
+		</div>
+		<script>
+			const maxLinesPerPage = 14; // = Math.floor(128 / 9) = page height / line height
+			const pageWidth = 114;
+			/** @type {{[c:string]: number}} */
+			const glyphWidths = {};
+			// `type` is unused; all printables behave the same
+			for (const [width, chars] of [
+				[2, ",;:!.|", "punct"],
+				[2, "i", "alnum"],
+				[3, "'`", "punct"],
+				[3, "l", "alnum"],
+				[4, "[]", "punct"],
+				[4, "It", "alnum"],
+				[4, " ", "space"],
+				[5, '"(){}<>*', "punct"],
+				[5, "fk", "alnum"],
+				[6, "§$_-?/\\&#%^+=", "punct"],
+				[6, "0123456789", "alnum"],
+				[6, "AaBbCcDdEeFGgHhJjKLMmNnOoPpQqRrSsTUuVvWwXxYyZz", "alnum"],
+				[7, "@~", "punct"],
+			]) {
+				[...chars].forEach((c) => (glyphWidths[c] = width));
+			}
+
+			const unknownGlyphsPrinted = new Set();
+			function getGlyphWidth(c, bold = false) {
+				const width = glyphWidths[c];
+				if (!width && !unknownGlyphsPrinted.has(c)) {
+					unknownGlyphsPrinted.add(c);
+					console.log(`Unknown letter ${JSON.stringify(c)}`);
+				}
+				return (width ?? 6) + (bold ? 1 : 0);
+			}
+
+			/** @param {string} str */
+			function getTextWidth(text, bold = false) {
+				return [...text].reduce((sum, c) => sum + getGlyphWidth(c, bold), 0);
+			}
+
+			/**
+			 * @typedef {"print"|"space"|"newline"|"color"|"style"|"reset"|"pgbrk"|"hyphen"} TokenType
+			 * @typedef {{text:string,type:TokenType}} Token
+			 * @param {string} text */
+			function tokenize(text) {
+				/** @type {Token[]} */
+				const tokens = [];
+				let prevChar = null;
+				const pushToken = (text, type) => tokens.push({ text, type });
+				const pushStyleToken = (text, type, style) =>
+					tokens.push({ text, type, style });
+				for (const c of text) {
+					if (c === "§") {
+						// whether valid style or not, the § is never printed
+					} else if (prevChar === "§") {
+						const cl = c.toLowerCase();
+						if ("0123456789abcdef".includes(cl)) {
+							pushStyleToken("§" + cl, "color", cl);
+						} else if ("klmno".includes(cl)) {
+							pushStyleToken("§" + cl, "style", cl);
+						} else if (cl === "r") {
+							pushToken("§r", "reset");
+						} else if (c === "\n") {
+							pushToken("§\n", "pgbrk"); // page break
+						} else if (c === "-") {
+							pushToken("§-", "hyphen");
+						} else pushToken(c, "print"); // for invalid styles, only the second char is printed
+					} else if (c === " ") {
+						pushToken(" ", "space");
+					} else if (c === "\n") {
+						pushToken("\n", "newline");
+					} else {
+						pushToken(c, "print");
+					}
+					prevChar = c;
+				}
+				return tokens;
+			}
+
+			/**
+			 * @typedef {Token[]} TokenLine
+			 * @param {Token[]} tokens */
+			function wrapTokens(tokens, wrapWidth = pageWidth) {
+				/** @type {TokenLine[]} */
+				const lines = []; // without line
+				/** @type {TokenLine} */
+				let line = []; // without word
+				/** @type {TokenLine} */
+				let word = [];
+				// some tokens are zero-width (e.g., style)
+				let lineRenderWidth = 0; // without word
+				let wordRenderWidth = 0;
+				let stylesBeforeWord = {};
+				let styles = {};
+				function reapplyStyles() {
+					const { color, ...restStyles } = stylesBeforeWord;
+					// color resets other styles, so apply it first
+					if (color)
+						line.push({ text: "§" + color, type: "color", style: color });
+					for (const style of Object.keys(restStyles)) {
+						line.push({ text: "§" + style, type: "style", style });
+					}
+				}
+				function pushLine() {
+					lines.push(line);
+					line = [];
+					lineRenderWidth = 0;
+					reapplyStyles(); // line break resets styles
+				}
+				function pushWord() {
+					line.push(...word);
+					word = [];
+					lineRenderWidth += wordRenderWidth;
+					wordRenderWidth = 0;
+					stylesBeforeWord = { ...styles };
+				}
+				for (const token of tokens) {
+					try {
+						switch (token.type) {
+							case "reset":
+								word.push(token); // zero width
+								styles = {};
+								break;
+							case "color":
+								word.push(token); // zero width
+								styles = { color: token.style }; // color resets style
+								break;
+							case "style":
+								word.push(token); // zero width
+								styles[token.style] = true;
+								break;
+							case "pgbrk":
+							case "newline":
+								word.push(token); // zero width
+								pushWord();
+								pushLine();
+								break;
+							case "hyphen":
+								const hyWidth = getTextWidth("-", styles.l);
+								if (lineRenderWidth + wordRenderWidth + hyWidth <= wrapWidth) {
+									// could break word at this token
+									word.push(token);
+									pushWord();
+								}
+								break;
+							case "space":
+								word.push(token);
+								wordRenderWidth += getTextWidth(token.text, styles.l);
+								pushWord();
+								if (lineRenderWidth + wordRenderWidth > wrapWidth) {
+									pushLine();
+								}
+								break;
+							case "print":
+								const tokenWidth = getTextWidth(token.text, styles.l);
+								const prevWidth = lineRenderWidth + wordRenderWidth;
+								if (prevWidth + tokenWidth > wrapWidth) {
+									if (line[line.length - 1]?.type === "hyphen") {
+										// hyphen fits because we checked this when flushing the word when encountering the hyphen
+										line.push({ text: "-", type: "print" });
+										// redudant, gets reset immediately: lineRenderWidth += getTextWidth("-", stylesBeforeWord.l);
+									}
+									if (lineRenderWidth) {
+										pushLine(); // without word
+									}
+									if (wordRenderWidth + tokenWidth > wrapWidth) {
+										pushWord();
+										pushLine();
+									}
+								}
+								word.push(token);
+								wordRenderWidth += tokenWidth;
+								break;
+							default:
+								console.error(`Unknown token type`, JSON.stringify(token));
+								break;
+						}
+					} catch (err) {
+						console.error("at token", JSON.stringify(token));
+						throw err;
+					}
+				}
+				if (word.length) pushWord();
+				if (line.length) pushLine();
+				return lines;
+			}
+
+			/** @param {string} text */
+			function wrapText(text, wrapWidth = pageWidth) {
+				const tokens = tokenize(text);
+				return wrapTokens(tokens, wrapWidth);
+			}
+
+			/** @param {TokenLine[]} lines */
+			function splitPages(lines) {
+				/** @type {TokenLine[][]} */
+				const pages = [];
+				/** @type {TokenLine[]} */
+				let currentPage = [];
+				const endPage = () => (pages.push(currentPage), (currentPage = []));
+				for (const line of lines) {
+					if (line.length === 1 && line[0].type === "pgbrk") {
+						// don't insert empty page if this line is just the pgbrk
+						// don't insert empty line at end of page
+						endPage();
+					} else {
+						if (currentPage.length >= maxLinesPerPage) {
+							endPage();
+						} else if (currentPage.length >= maxLinesPerPage - 1) {
+							// prevent orphans (first line detached from its paragraph)
+							const lastToken = line[line.length - 1];
+							if (lastToken.type !== "newline") {
+								const prevLine = currentPage[currentPage.length - 1];
+								const lastPrevToken = prevLine?.[prevLine?.length - 1];
+								if (lastPrevToken.type === "newline") {
+									endPage();
+								}
+							}
+						}
+						// TODO prevent widows (last line detached from its paragraph)
+
+						currentPage.push(line);
+
+						if (line[line.length - 1]?.type === "pgbrk") {
+							endPage();
+						}
+					}
+				}
+				if (currentPage.length) pages.push(currentPage);
+				return pages;
+			}
+
+			/** @param {TokenLine[][]} pages */
+			function renderStendhal(pages, title = "Title", author = "Author") {
+				const validTokens = "print space newline color style reset".split(" ");
+				const lineToStr = (l) =>
+					l
+						.filter((t) => validTokens.includes(t.type))
+						.map((t) => t.text)
+						.join("");
+				const pagesStr = pages
+					.map((lines) => "\n#- " + lines.map(lineToStr).join("").trimEnd())
+					.join("");
+				return `title: ${title}\nauthor: ${author}\npages:${pagesStr}`;
+			}
+
+			/** @param {TokenLine[][]} pages */
+			function renderGhostwriter(pages, title = "Title", author = "Author") {
+				const validTokens = "print space newline color style reset".split(" ");
+				function lineToStr(l) {
+					let lStr = l
+						.filter((t) => validTokens.includes(t.type))
+						.map((t) => t.text)
+						.join("");
+					return lStr.replace("\n", "") + "##\n";
+				}
+				return pages
+					.map((lines) => {
+						let linesStr = lines.map(lineToStr).join("");
+						if (!linesStr.endsWith("##\n")) linesStr += "##\n";
+						return linesStr;
+					})
+					.join(">>>>\n");
+			}
+
+			/** @param {TokenLine[][]} pages */
+			function renderDOM(pages) {
+				const previewNode = document.createElement("div");
+				pages.forEach((lines, pageNr) => {
+					const newPageNode = document.createElement("div");
+					newPageNode.innerText = `Page ${pageNr + 1}`;
+					newPageNode.className = "page-marker";
+					previewNode.appendChild(newPageNode);
+					for (const line of lines) {
+						const outerNode = document.createElement("span");
+						let innerNode = outerNode;
+						for (const token of line) {
+							switch (token.type) {
+								case "space":
+								case "print":
+									innerNode.appendChild(document.createTextNode(token.text));
+									break;
+								case "reset": {
+									innerNode = outerNode;
+									const fmtNode = document.createElement("span");
+									fmtNode.className = "fmtcode";
+									fmtNode.innerText = "§r";
+									innerNode.appendChild(fmtNode);
+									break;
+								}
+								case "color":
+									innerNode = outerNode; // color resets style
+								// fall through
+								case "style": {
+									const styleNode = document.createElement("span");
+									styleNode.className = "fmt" + token.style;
+									innerNode.appendChild(styleNode);
+									innerNode = styleNode;
+									const fmtNode = document.createElement("span");
+									fmtNode.className = "fmtcode";
+									fmtNode.innerText = "§" + token.style;
+									innerNode.appendChild(fmtNode);
+									break;
+								}
+							}
+						}
+						previewNode.appendChild(outerNode);
+						previewNode.appendChild(document.createElement("br"));
+					}
+				});
+				return previewNode;
+			}
+
+			const titleElem = document.getElementById("title");
+			const authorElem = document.getElementById("author");
+			const sourceElem = document.getElementById("source");
+			const outputElem = document.getElementById("output");
+			const stendhalElem = document.getElementById("stendhal");
+			const ghostwriterElem = document.getElementById("ghostwriter");
+
+			const localStorageKey = "civbooks.editor.savedState";
+			const savedState = localStorage.getItem(localStorageKey);
+			if (savedState) {
+				const { title = "", author = "", source = "" } = JSON.parse(savedState);
+				if (title) titleElem.value = title;
+				if (author) authorElem.value = author;
+				if (source) sourceElem.value = source;
+			}
+
+			let pagesCache = null;
+
+			function handleEdit() {
+				let title = titleElem.value;
+				let author = authorElem.value;
+				const source = sourceElem.value;
+
+				localStorage.setItem(
+					localStorageKey,
+					JSON.stringify({ title, author, source })
+				);
+				title = title || "Title";
+				author = author || "Author";
+
+				const lines = wrapText(source, pageWidth);
+				const pages = splitPages(lines);
+
+				pagesCache = pages;
+
+				outputElem.replaceChildren(renderDOM(pages));
+
+				updateValidInputLen(titleElem, 16);
+				updateValidInputLen(authorElem, 16);
+
+				stendhalElem.href = "#"; // set to blob in renderStendhal()
+				stendhalElem.setAttribute("download", `${title}.stendhal`);
+				ghostwriterElem.href = "#"; // set to blob in renderGhostwriter()
+				ghostwriterElem.setAttribute("download", `${title}.ghb`);
+			}
+
+			function updateValidInputLen(elem, maxLen = 16) {
+				if (elem.value.length > maxLen) {
+					elem.style.backgroundColor = "#ffdddd";
+				} else elem.style.backgroundColor = null;
+			}
+
+			titleElem.oninput = handleEdit;
+			authorElem.oninput = handleEdit;
+			sourceElem.oninput = handleEdit;
+			handleEdit();
+
+			function applyFormat(prefix, suffix = "") {
+				// https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/setRangeText
+				const selStart = sourceElem.selectionStart;
+				const selEnd = sourceElem.selectionEnd;
+				const oldSel = sourceElem.value.substring(selStart, selEnd);
+				let newSel = prefix + oldSel;
+				if (selStart !== selEnd) newSel += suffix;
+				// TODO remove redundant formatting codes
+				sourceElem.setRangeText(newSel, selStart, selEnd, "select");
+				sourceElem.focus();
+				handleEdit();
+			}
+
+			function setStendhalDownload() {
+				if (!pagesCache) return;
+				const title = titleElem.value || "Title";
+				const author = authorElem.value || "Author";
+				const stendhal = renderStendhal(pagesCache, title, author);
+				// https://www.delftstack.com/howto/javascript/javascript-download/
+				stendhalElem.href = window.URL.createObjectURL(new Blob([stendhal]));
+			}
+
+			function setGhostwriterDownload() {
+				if (!pagesCache) return;
+				const title = titleElem.value || "Title";
+				const author = authorElem.value || "Author";
+				const ghb = renderGhostwriter(pagesCache, title, author);
+				// https://www.delftstack.com/howto/javascript/javascript-download/
+				ghostwriterElem.href = window.URL.createObjectURL(new Blob([ghb]));
+			}
+
+			function runTests() {
+				const assertErrors = [];
+				function assertArrayEquals(a, b, desc) {
+					for (let i = 0; i < Math.max(a.length, b.length); ++i)
+						if (a[i] !== b[i])
+							return assertErrors.push([
+								desc ?? "array equality",
+								...["failed: index", i, a, b],
+							]);
+				}
+				const joinTokenTexts = (lines) =>
+					lines.map((l) => l.map((t) => t.text).join(""));
+				assertArrayEquals(
+					["~~~~~~~~~~~~~~§4~~.", "§4."],
+					joinTokenTexts(wrapText("~~~~~~~~~~~~~~§4~~..")),
+					"ignores style width"
+				);
+				assertArrayEquals(
+					["~~~~~~~~~~~~~~~~.\n", "\n", "a"],
+					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~~.\n\na")),
+					"handles full line then multiple breaks"
+				);
+				assertArrayEquals(
+					["~~~~~~~~~~~~~~~~. ", "\n", "\n", "a"],
+					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~~. \n\na")),
+					"handles full line then space then multiple breaks"
+				);
+				assertArrayEquals(
+					["a ", "~~~~~~~~~~~~~~~~.", "."],
+					joinTokenTexts(wrapText("a ~~~~~~~~~~~~~~~~..")),
+					"breaks at space, keeps non-spaces together"
+				);
+				assertArrayEquals(
+					["~~~~~~~~~~~~~~~~. ", "."],
+					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~~. .")),
+					"ignores single space's width after full line"
+				);
+				assertArrayEquals(
+					["~~~~~~~~~~~~~~~t  ", " ."],
+					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~t   .")),
+					"wraps multiple spaces ignoring one's width"
+				);
+				assertArrayEquals(
+					["§l~~~~~~~~~~~~~~", "§l~"],
+					joinTokenTexts(wrapText("§l~~~~~~~~~~~~~~~")),
+					"handles bold text width"
+				);
+				assertArrayEquals(
+					["§4§l~~~~~~~~~~~~~~", "§4§l~\n", "§4§l~§r~~~~~~~~~~~~~~~", "~"],
+					joinTokenTexts(wrapText("§4§l~~~~~~~~~~~~~~~\n~§r~~~~~~~~~~~~~~~~")),
+					"re-applies style after line wrap/break"
+				);
+				assertArrayEquals(
+					["~~~~~~~~~~~~~~~§--", "~~"],
+					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~§-~~")),
+					"applies hyphen suggestion"
+				);
+				if (assertErrors.length) {
+					assertErrors.forEach((errArgs) => console.error(...errArgs));
+					// throw new Error(`${errors.length} tests failed`);
+				} else {
+					console.log("Passed all tests.");
+				}
+			}
+			runTests();
+		</script>
+	</body>
+</html>
