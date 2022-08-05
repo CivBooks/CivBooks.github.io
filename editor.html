@@ -28,6 +28,7 @@
 				color: rgba(0, 0, 0, 0.4);
 				text-align: right;
 				margin: 1em 0;
+				user-select: none;
 			}
 
 			/* invisible but can be copypasted */
@@ -200,7 +201,7 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 			for (const [width, chars] of [
 				[2, ",;:!.|", "punct"],
 				[2, "i", "alnum"],
-				[3, "'`", "punct"],
+				[3, "'`•", "punct"],
 				[3, "l", "alnum"],
 				[4, "[]", "punct"],
 				[4, "It", "alnum"],
@@ -351,6 +352,7 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 										// hyphen fits because we checked this when flushing the word when encountering the hyphen
 										line.push({ text: "-", type: "print" });
 										// redudant, gets reset immediately: lineRenderWidth += getTextWidth("-", stylesBeforeWord.l);
+										line.push({ text: "\n", type: "newline" });
 									}
 									if (lineRenderWidth) {
 										pushLine(); // without word
@@ -362,6 +364,7 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 								}
 								word.push(token);
 								wordRenderWidth += tokenWidth;
+								if ("-/".includes(token.text)) pushWord();
 								break;
 							default:
 								console.error(`Unknown token type`, JSON.stringify(token));
@@ -401,10 +404,10 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 						} else if (currentPage.length >= maxLinesPerPage - 1) {
 							// prevent orphans (first line detached from its paragraph)
 							const lastToken = line[line.length - 1];
-							if (lastToken.type !== "newline") {
+							if (lastToken?.type !== "newline") {
 								const prevLine = currentPage[currentPage.length - 1];
 								const lastPrevToken = prevLine?.[prevLine?.length - 1];
-								if (lastPrevToken.type === "newline") {
+								if (lastPrevToken?.type === "newline") {
 									endPage();
 								}
 							}
@@ -460,8 +463,9 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 				const previewNode = document.createElement("div");
 				pages.forEach((lines, pageNr) => {
 					const newPageNode = document.createElement("div");
-					newPageNode.innerText = `Page ${pageNr + 1}`;
 					newPageNode.className = "page-marker";
+					newPageNode.innerText = `Page ${pageNr + 1}`;
+					newPageNode.innerText += `: ${lines.length} lines`;
 					previewNode.appendChild(newPageNode);
 					for (const line of lines) {
 						const outerNode = document.createElement("span");
