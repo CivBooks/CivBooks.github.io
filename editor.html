@@ -194,6 +194,7 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 		</div>
 		<script>
 			const maxLinesPerPage = 14; // = Math.floor(128 / 9) = page height / line height
+			const maxCharsPerPage = 256;
 			const pageWidth = 114;
 			/** @type {{[c:string]: number}} */
 			const glyphWidths = {};
@@ -274,35 +275,62 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 			 * @typedef {Token[]} TokenLine
 			 * @param {Token[]} tokens */
 			function wrapTokens(tokens, wrapWidth = pageWidth) {
+				/** @type {TokenLine[][]} */
+				let pages = []; // without page
 				/** @type {TokenLine[]} */
-				const lines = []; // without line
+				let page = []; // without line
 				/** @type {TokenLine} */
 				let line = []; // without word
 				/** @type {TokenLine} */
 				let word = [];
 				// some tokens are zero-width (e.g., style)
+				let pageCharsLen = 0; // without line/word
+				let wordCharsLen = 0;
 				let lineRenderWidth = 0; // without word
 				let wordRenderWidth = 0;
 				let stylesBeforeWord = {};
 				let styles = {};
 				function reapplyStyles() {
 					const { color, ...restStyles } = stylesBeforeWord;
-					// color resets other styles, so apply it first
-					if (color)
-						line.push({ text: "§" + color, type: "color", style: color });
 					for (const style of Object.keys(restStyles)) {
-						line.push({ text: "§" + style, type: "style", style });
+						word.unshift({ text: "§" + style, type: "style", style });
+						wordCharsLen += 2;
+					}
+					// color resets other styles, so apply it to beginning
+					if (color) {
+						word.unshift({ text: "§" + color, type: "color", style: color });
+						wordCharsLen += 2;
 					}
 				}
+				function pushPage() {
+					pages.push(page);
+					page = [];
+					pageCharsLen = 0;
+				}
 				function pushLine() {
-					lines.push(line);
+					page.push(line);
 					line = [];
 					lineRenderWidth = 0;
 					reapplyStyles(); // line break resets styles
+
+					// TODO prevent orphans (first line detached from its paragraph)
+					// TODO prevent widows (last line detached from its paragraph)
+					if (page.length >= maxLinesPerPage) {
+						pushPage();
+					}
 				}
 				function pushWord() {
+					if (pageCharsLen + wordCharsLen > maxCharsPerPage) {
+						pushLine();
+						// pushing line may already have pushed page due to lines-per-page limit
+						if (pageCharsLen + wordCharsLen > maxCharsPerPage) {
+							pushPage();
+						}
+					}
 					line.push(...word);
 					word = [];
+					pageCharsLen += wordCharsLen;
+					wordCharsLen = 0;
 					lineRenderWidth += wordRenderWidth;
 					wordRenderWidth = 0;
 					stylesBeforeWord = { ...styles };
@@ -311,20 +339,28 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 					try {
 						switch (token.type) {
 							case "reset":
-								word.push(token); // zero width
+								word.push(token); // zero render width
+								wordCharsLen += token.text.length;
 								styles = {};
 								break;
 							case "color":
-								word.push(token); // zero width
+								word.push(token); // zero render width
+								wordCharsLen += token.text.length;
 								styles = { color: token.style }; // color resets style
 								break;
 							case "style":
-								word.push(token); // zero width
+								word.push(token); // zero render width
+								wordCharsLen += token.text.length;
 								styles[token.style] = true;
 								break;
 							case "pgbrk":
+								if (word.length) pushWord();
+								if (line.length) pushLine();
+								if (page.length) pushPage();
+								break;
 							case "newline":
-								word.push(token); // zero width
+								word.push(token); // zero render width
+								wordCharsLen += token.text.length;
 								pushWord();
 								pushLine();
 								break;
@@ -338,6 +374,7 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 								break;
 							case "space":
 								word.push(token);
+								wordCharsLen += token.text.length;
 								wordRenderWidth += getTextWidth(token.text, styles.l);
 								pushWord();
 								if (lineRenderWidth + wordRenderWidth > wrapWidth) {
@@ -351,11 +388,15 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 									if (line[line.length - 1]?.type === "hyphen") {
 										// hyphen fits because we checked this when flushing the word when encountering the hyphen
 										line.push({ text: "-", type: "print" });
+										wordCharsLen += 1;
 										// redudant, gets reset immediately: lineRenderWidth += getTextWidth("-", stylesBeforeWord.l);
-										line.push({ text: "\n", type: "newline" });
+										// don't include \n to save characters per page
+										// line.push({ text: "\n", type: "newline" });
+										// wordCharsLen += 1;
 									}
 									if (lineRenderWidth) {
-										pushLine(); // without word
+										// don't push word
+										pushLine();
 									}
 									if (wordRenderWidth + tokenWidth > wrapWidth) {
 										pushWord();
@@ -363,6 +404,7 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 									}
 								}
 								word.push(token);
+								wordCharsLen += token.text.length;
 								wordRenderWidth += tokenWidth;
 								if ("-/".includes(token.text)) pushWord();
 								break;
@@ -377,52 +419,14 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 				}
 				if (word.length) pushWord();
 				if (line.length) pushLine();
-				return lines;
+				if (page.length) pushPage();
+				return pages;
 			}
 
 			/** @param {string} text */
 			function wrapText(text, wrapWidth = pageWidth) {
 				const tokens = tokenize(text);
 				return wrapTokens(tokens, wrapWidth);
-			}
-
-			/** @param {TokenLine[]} lines */
-			function splitPages(lines) {
-				/** @type {TokenLine[][]} */
-				const pages = [];
-				/** @type {TokenLine[]} */
-				let currentPage = [];
-				const endPage = () => (pages.push(currentPage), (currentPage = []));
-				for (const line of lines) {
-					if (line.length === 1 && line[0].type === "pgbrk") {
-						// don't insert empty page if this line is just the pgbrk
-						// don't insert empty line at end of page
-						endPage();
-					} else {
-						if (currentPage.length >= maxLinesPerPage) {
-							endPage();
-						} else if (currentPage.length >= maxLinesPerPage - 1) {
-							// prevent orphans (first line detached from its paragraph)
-							const lastToken = line[line.length - 1];
-							if (lastToken?.type !== "newline") {
-								const prevLine = currentPage[currentPage.length - 1];
-								const lastPrevToken = prevLine?.[prevLine?.length - 1];
-								if (lastPrevToken?.type === "newline") {
-									endPage();
-								}
-							}
-						}
-						// TODO prevent widows (last line detached from its paragraph)
-
-						currentPage.push(line);
-
-						if (line[line.length - 1]?.type === "pgbrk") {
-							endPage();
-						}
-					}
-				}
-				if (currentPage.length) pages.push(currentPage);
-				return pages;
 			}
 
 			/** @param {TokenLine[][]} pages */
@@ -537,8 +541,7 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 				title = title || "Title";
 				author = author || "Author";
 
-				const lines = wrapText(source, pageWidth);
-				const pages = splitPages(lines);
+				const pages = wrapText(source, pageWidth);
 
 				pagesCache = pages;
 
@@ -596,59 +599,68 @@ The §lquick §4brown §ofox jumps§r over the lazy dog.
 			}
 
 			function runTests() {
+				console.log("Beginning tests.");
 				const assertErrors = [];
 				function assertArrayEquals(a, b, desc) {
 					for (let i = 0; i < Math.max(a.length, b.length); ++i)
-						if (a[i] !== b[i])
+						if (Array.isArray(a[i]) !== Array.isArray(b[i])) {
 							return assertErrors.push([
 								desc ?? "array equality",
 								...["failed: index", i, a, b],
 							]);
+						} else if (Array.isArray(a[i])) {
+							assertArrayEquals(a[i], b[i], desc);
+						} else if (a[i] !== b[i]) {
+							return assertErrors.push([
+								desc ?? "array equality",
+								...["failed: index", i, a, b],
+							]);
+						}
 				}
-				const joinTokenTexts = (lines) =>
-					lines.map((l) => l.map((t) => t.text).join(""));
+				const joinTokenTexts = (pages) =>
+					pages.map((lines) => lines.map((l) => l.map((t) => t.text).join("")));
 				assertArrayEquals(
-					["~~~~~~~~~~~~~~§4~~.", "§4."],
+					[["~~~~~~~~~~~~~~§4~~.", "§4."]],
 					joinTokenTexts(wrapText("~~~~~~~~~~~~~~§4~~..")),
 					"ignores style width"
 				);
 				assertArrayEquals(
-					["~~~~~~~~~~~~~~~~.\n", "\n", "a"],
+					[["~~~~~~~~~~~~~~~~.\n", "\n", "a"]],
 					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~~.\n\na")),
 					"handles full line then multiple breaks"
 				);
 				assertArrayEquals(
-					["~~~~~~~~~~~~~~~~. ", "\n", "\n", "a"],
+					[["~~~~~~~~~~~~~~~~. ", "\n", "\n", "a"]],
 					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~~. \n\na")),
 					"handles full line then space then multiple breaks"
 				);
 				assertArrayEquals(
-					["a ", "~~~~~~~~~~~~~~~~.", "."],
+					[["a ", "~~~~~~~~~~~~~~~~.", "."]],
 					joinTokenTexts(wrapText("a ~~~~~~~~~~~~~~~~..")),
 					"breaks at space, keeps non-spaces together"
 				);
 				assertArrayEquals(
-					["~~~~~~~~~~~~~~~~. ", "."],
+					[["~~~~~~~~~~~~~~~~. ", "."]],
 					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~~. .")),
 					"ignores single space's width after full line"
 				);
 				assertArrayEquals(
-					["~~~~~~~~~~~~~~~t  ", " ."],
+					[["~~~~~~~~~~~~~~~t  ", " ."]],
 					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~t   .")),
 					"wraps multiple spaces ignoring one's width"
 				);
 				assertArrayEquals(
-					["§l~~~~~~~~~~~~~~", "§l~"],
+					[["§l~~~~~~~~~~~~~~", "§l~"]],
 					joinTokenTexts(wrapText("§l~~~~~~~~~~~~~~~")),
 					"handles bold text width"
 				);
 				assertArrayEquals(
-					["§4§l~~~~~~~~~~~~~~", "§4§l~\n", "§4§l~§r~~~~~~~~~~~~~~~", "~"],
+					[["§4§l~~~~~~~~~~~~~~", "§4§l~\n", "§4§l~§r~~~~~~~~~~~~~~~", "~"]],
 					joinTokenTexts(wrapText("§4§l~~~~~~~~~~~~~~~\n~§r~~~~~~~~~~~~~~~~")),
 					"re-applies style after line wrap/break"
 				);
 				assertArrayEquals(
-					["~~~~~~~~~~~~~~~§--", "~~"],
+					[["~~~~~~~~~~~~~~~§--", "~~"]],
 					joinTokenTexts(wrapText("~~~~~~~~~~~~~~~§-~~")),
 					"applies hyphen suggestion"
 				);
