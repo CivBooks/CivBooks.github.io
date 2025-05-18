@@ -58,7 +58,10 @@ def write_books_htmls_from_json_paths(source_paths):
         print(f'Could not read {index_json_path}: {e}', file=sys.stderr)
 
     for path in source_paths:
-        with open(path, 'r') as f:
+        f = sys.stdin
+        if path != '/dev/stdin':
+            f = open(path, 'r')
+        with f:
             write_books_htmls_from_json(f, index)
 
     with open(index_json_path, 'w') as f:
@@ -156,7 +159,7 @@ def write_books_htmls_from_json(source_file, books_metadata=None):
             os.makedirs(dir_path, exist_ok=True)
             if write:
                 book_html = template_book(book_json)
-                with open(page_path, 'w') as file_html:
+                with open(page_path, 'w', encoding='utf-8') as file_html:
                     file_html.write(book_html)
             if books_metadata is not None:
                 books_metadata[index_key] = book_json_metadata
