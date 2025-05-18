@@ -24,7 +24,7 @@ import json
 def print_json_book_from_stendhal(fpath, item_origin):
     title = None
     author = None
-    with open(fpath, "r") as file:
+    with open(fpath, "r", encoding="utf-8") as file:
         while True:
             line = file.readline().strip()
             if line == "pages:":
@@ -46,6 +46,9 @@ def print_json_book_from_stendhal(fpath, item_origin):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python3 book_from_stendhal.py \"path/to/my_book.stendhal\" \"Server name\"")
+        exit()
     fpath = sys.argv[1]
     item_origin = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else None
     print_json_book_from_stendhal(fpath, item_origin)
