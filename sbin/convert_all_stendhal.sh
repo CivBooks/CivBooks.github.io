@@ -2,7 +2,7 @@
 if [ $# -lt 2 ]
     then
         echo $#
-        echo "Usage: ./convert_all_stendhal.sh PATH/TO/STENDHAL/FOLDER iteration_name"
+        echo "Usage: ./sbin/convert_all_stendhal.sh PATH/TO/STENDHAL/FOLDER iteration_name"
         exit 1
 fi
 iteration="${@: -1}"
