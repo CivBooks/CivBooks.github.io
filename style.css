@@ -11,6 +11,8 @@ body {
 
 body > header,
 body > h1,
+body > h2,
+body > form,
 body > div,
 body > p,
 body > footer {
